@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="MavenProjectsManager">
+    <option name="originalFiles">
+      <list>
+        <option value="$PROJECT_DIR$/users/pom.xml" />
+        <option value="$PROJECT_DIR$/payments/pom.xml" />
+        <option value="$PROJECT_DIR$/stocks/pom.xml" />
+        <option value="$PROJECT_DIR$/orders/pom.xml" />
+      </list>
+    </option>
+  </component>
+  <component name="ProjectRootManager">
+    <output url="file://$PROJECT_DIR$/out" />
+  </component>
+  <component name="SbtLocalSettings">
+    <option name="projectSyncType">
+      <map>
+        <entry key="$PROJECT_DIR$/../AI Techniques/AI_helper" value="PREVIEW" />
+        <entry key="$PROJECT_DIR$/../SBD-repo/SBD-2018/lab3/GDELTConsumer" value="PREVIEW" />
+        <entry key="$PROJECT_DIR$/../SBD-repo/SBD-2018/lab3/GDELTStream" value="PREVIEW" />
+      </map>
+    </option>
+  </component>
+  <component name="ScalaSbtSettings">
+    <option name="customVMPath" />
+  </component>
+</project>
