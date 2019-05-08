@@ -6,10 +6,11 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import java.io.Serializable;
 
 @Entity
-@Table(name = "Users")
-public class User {
+@Table(name = "user", schema = "public")
+public class User implements Serializable {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -20,6 +21,9 @@ public class User {
 
 	@Column(name = "credit")
 	private Double credit;
+
+	public User() {
+	}
 
 	public Integer getId() {
 		return id;
