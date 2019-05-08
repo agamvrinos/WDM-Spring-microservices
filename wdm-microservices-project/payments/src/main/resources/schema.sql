@@ -1,3 +1,6 @@
+-- Create custom enum type for field "status"
+CREATE TYPE status AS ENUM ('success','failure', 'pending');
+-- Create Payment table
 CREATE TABLE public."Payment"
 (
     id integer NOT NULL,
