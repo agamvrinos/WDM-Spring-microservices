@@ -1,4 +1,4 @@
--- Creating dataset
+-- Creating database
 
 CREATE DATABASE "Orders"
     WITH 
@@ -8,7 +8,6 @@ CREATE DATABASE "Orders"
     LC_CTYPE = 'C'
     TABLESPACE = pg_default
     CONNECTION LIMIT = -1;
-
 
 -- Creating database tables
 CREATE TABLE public."Order"
