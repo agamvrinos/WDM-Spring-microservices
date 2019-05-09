@@ -47,7 +47,7 @@ public class UsersEndpoint {
 
     @GetMapping("/credit/{id}")
     public JsonNode getUserCredit(@PathVariable("id") Long id) {
-        Long credit = usersService.getUserCredit(id);
+        Integer credit = usersService.getUserCredit(id);
         return objectMapper.createObjectNode().put("credit", credit);
     }
 
@@ -56,7 +56,7 @@ public class UsersEndpoint {
             @PathVariable("id") Long id,
             @PathVariable("amount") String amount
     ) {
-        usersService.subtractCredit(id, Long.parseLong(amount));
+        usersService.subtractCredit(id, Integer.parseInt(amount));
     }
 
     @PostMapping("/credit/add/{id}/{amount}")
@@ -64,6 +64,6 @@ public class UsersEndpoint {
             @PathVariable("id") Long id,
             @PathVariable("amount") String amount
     ) {
-        usersService.addCredit(id, Long.parseLong(amount));
+        usersService.addCredit(id, Integer.parseInt(amount));
     }
 }
