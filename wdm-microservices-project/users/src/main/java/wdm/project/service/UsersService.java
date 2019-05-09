@@ -3,42 +3,111 @@ package wdm.project.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import wdm.project.dto.User;
+import wdm.project.exception.UnsufficientCreditException;
 import wdm.project.repository.UsersRepository;
 
 @Service
 public class UsersService {
 
-	@Autowired
-	private UsersRepository usersRepository;
+    @Autowired
+    private UsersRepository usersRepository;
 
-	public void createUser(User requestUser) {
-		User user = new User();
-		user.setName(requestUser.getName());
-		user.setCredit(requestUser.getCredit());
-		usersRepository.save(user);
-	}
+    /**
+     * Creates a new user.
+     *
+     * @param requestUser a user object containing the information
+     * to be stored
+     * @return the created user
+     */
+    public User createUser(User requestUser) {
+        User user = new User();
+        user.setName(requestUser.getName());
+        user.setCredit(requestUser.getCredit());
+        return usersRepository.save(user);
+    }
 
-	public void removeUser(Integer id) {
-		//TODO: implement me
-	}
+    /**
+     * Removes the user of the provided id.
+     *
+     * @param id the id of the user to be removed
+     */
+    public void removeUser(Long id) {
+        User storedUser = findUser(id);
+        usersRepository.delete(storedUser);
+    }
 
-	public void updateUser(Integer id) {
-		//TODO: implement me
-	}
+    /**
+     * Updates the {@code credit} of the user with the provided id.
+     *
+     * @param id the id of the user to be updates
+     * @param requestUser a user object that contains the new
+     * {@code credit} value
+     */
+    public void updateUser(Long id, User requestUser) {
+        User storedUser = findUser(id);
+        Long requestCredit = requestUser.getCredit();
+        storedUser.setCredit(requestCredit);
+        usersRepository.save(storedUser);
+    }
 
-	public void findUser(Integer id) {
-		//TODO: implement me
-	}
+    /**
+     * Finds the user with the provided id.
+     *
+     * @param id the id of the user to be fetched
+     * @return the user object with the provided i
+     * @throws RuntimeException in case of invalid id
+     */
+    public User findUser(Long id) throws RuntimeException {
+        if (id == null) {
+            throw new RuntimeException("Id was not provided");
+        }
+        boolean existsUser = usersRepository.existsById(id);
+        if (!existsUser) {
+            throw new RuntimeException("There is no such user");
+        }
+        return usersRepository.findById(id).orElseThrow(RuntimeException::new);
+    }
 
-	public void getUserCredit(Integer id) {
-		//TODO: implement me
-	}
+    /**
+     * Returns the {@code credit} of the user with the provided id.
+     *
+     * @param id the id of the user
+     * @return the credit of the user with the provided id
+     */
+    public Long getUserCredit(Long id) {
+        User storedUser = findUser(id);
+        return storedUser.getCredit();
+    }
 
-	public void addCredit(Integer id, String amount) {
-		//TODO: implement me
-	}
+    /**
+     * Adds credit to the user of the provided id.
+     *
+     * @param id the id of the user, the credit of which is
+     * going to be updated
+     * @param amount the amount to add to the existing credit
+     */
+    public void addCredit(Long id, Long amount) {
+        User user = findUser(id);
+        long credit = user.getCredit();
+        user.setCredit(credit + amount);
+        usersRepository.save(user);
+    }
 
-	public void subtractCredit(Integer id, String amount) {
-		//TODO: implement me
-	}
+    /**
+     * Removed credit from the user of the provided id.
+     *
+     * @param id the id of the user, the credit of which is
+     * going to be updated
+     * @param amount the amount to remove from the existing credit
+     */
+    public void subtractCredit(Long id, Long amount) {
+        User user = findUser(id);
+        Long credit = user.getCredit();
+        if (amount > credit) {
+            throw new UnsufficientCreditException(id);
+        } else {
+            user.setCredit(credit - amount);
+            usersRepository.save(user);
+        }
+    }
 }
