@@ -1,5 +1,7 @@
 package wdm.project.endpoint;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,47 +18,52 @@ import wdm.project.service.UsersService;
 @RequestMapping("/users")
 public class UsersEndpoint {
 
-	@Autowired
-	private UsersService usersService;
+    @Autowired
+    private ObjectMapper objectMapper;
 
-	@PostMapping("/create")
-	public void createUser(@RequestBody User requestUser) {
-		usersService.createUser(requestUser);
-	}
+    @Autowired
+    private UsersService usersService;
 
-	@DeleteMapping("/remove/{id}")
-	public void removeUser(@PathVariable("id") Integer id) {
-		usersService.removeUser(id);
-	}
+    @PostMapping("/create")
+    public JsonNode createUser(@RequestBody User requestUser) {
+        int userId = usersService.createUser(requestUser).getId();
+        return objectMapper.createObjectNode().put("id", userId);
+    }
 
-	@PutMapping("/update/{id}")
-	public void updateUser(@PathVariable("id") Integer id) {
-		usersService.updateUser(id);
-	}
+    @DeleteMapping("/remove/{id}")
+    public void removeUser(@PathVariable("id") Integer id) {
+        usersService.removeUser(id);
+    }
 
-	@GetMapping("/find/{id}")
-	public void findUser(@PathVariable("id") Integer id) {
-		usersService.findUser(id);
-	}
+    @PutMapping("/update/{id}")
+    public void updateUser(@PathVariable("id") Integer id, @RequestBody User user) {
+        usersService.updateUser(id, user);
+    }
 
-	@GetMapping("/credit/{id}")
-	public void getUserCredit(@PathVariable("id") Integer id) {
-		usersService.getUserCredit(id);
-	}
+    @GetMapping("/find/{id}")
+    public User findUser(@PathVariable("id") Integer id) {
+		return usersService.findUser(id).orElseThrow(
+                () -> new UserNotFoundException(id));
+    }
 
-	@PostMapping("/credit/subtract/{id}/{amount}")
-	public void subtractCredit(
-			@PathVariable("id") Integer id,
-			@PathVariable("amount") String amount
-	) {
-		usersService.subtractCredit(id, amount);
-	}
+    @GetMapping("/credit/{id}")
+    public void getUserCredit(@PathVariable("id") Integer id) {
+        usersService.getUserCredit(id);
+    }
 
-	@PostMapping("/credit/add/{id}/{amount}")
-	public void addCredit(
-			@PathVariable("id") Integer id,
-			@PathVariable("amount") String amount
-	) {
-		usersService.addCredit(id, amount);
-	}
+    @PostMapping("/credit/subtract/{id}/{amount}")
+    public void subtractCredit(
+            @PathVariable("id") Integer id,
+            @PathVariable("amount") String amount
+    ) {
+        usersService.subtractCredit(id, Double.parseDouble(amount));
+    }
+
+    @PostMapping("/credit/add/{id}/{amount}")
+    public void addCredit(
+            @PathVariable("id") Integer id,
+            @PathVariable("amount") String amount
+    ) {
+        usersService.addCredit(id, Double.parseDouble(amount));
+    }
 }
