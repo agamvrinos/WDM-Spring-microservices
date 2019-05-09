@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import wdm.project.dto.Payment;
@@ -23,6 +25,17 @@ public class PaymentsEndpoint {
     @GetMapping("/status/{order_id}")
     public JsonNode getStatus(@PathVariable("order_id") Integer orderId) {
         Payment payment = paymentsService.getPayment(orderId);
+        return objectMapper.createObjectNode().put("status", payment.getStatus().toString());
+    }
+
+    @PostMapping("/pay/{order_id}")
+    public JsonNode payOrder(@PathVariable("order_id") Integer orderId, @RequestBody JsonNode body) {
+        if (!body.hasNonNull("user_id") || !body.hasNonNull("total")) {
+            throw new IllegalArgumentException();
+        }
+        Integer userId = body.get("user_id").asInt();
+        Integer amount = body.get("total").asInt();
+        Payment payment = paymentsService.payOrder(orderId, userId, amount);
         return objectMapper.createObjectNode().put("status", payment.getStatus().toString());
     }
 }

@@ -10,7 +10,7 @@ CREATE DATABASE "Payments"
 \c Payments
 
 -- Create custom enum type for field "status"
-CREATE TYPE status AS ENUM ('success','failure', 'pending');
+CREATE TYPE status AS ENUM ('success', 'failure', 'pending');
 -- Create Payment table
 CREATE TABLE public.payment
 (

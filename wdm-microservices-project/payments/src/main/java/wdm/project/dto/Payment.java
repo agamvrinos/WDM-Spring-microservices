@@ -1,19 +1,22 @@
 package wdm.project.dto;
 
+import com.vladmihalcea.hibernate.type.basic.PostgreSQLEnumType;
+import org.hibernate.annotations.Type;
+import org.hibernate.annotations.TypeDef;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
 @Entity
 @Table(name = "payment", schema = "public")
+@TypeDef(name = "pgsql_enum", typeClass = PostgreSQLEnumType.class)
 public class Payment {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer orderId;
 
     @Column(name = "user_id")
@@ -21,6 +24,7 @@ public class Payment {
 
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
+    @Type(type = "pgsql_enum")
     private Status status;
 
     public Payment() {
