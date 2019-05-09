@@ -1,42 +1,35 @@
 -- Creating database
 
 CREATE DATABASE "Orders"
-    WITH 
+    WITH
     OWNER = postgres
     ENCODING = 'UTF8'
-    LC_COLLATE = 'C'
-    LC_CTYPE = 'C'
     TABLESPACE = pg_default
     CONNECTION LIMIT = -1;
 
 -- Creating database tables
-CREATE TABLE public."Order"
+CREATE TABLE public.order
 (
-    id integer NOT NULL,
+    id serial NOT NULL ,
     user_id integer NOT NULL,
     total real NOT NULL,
     CONSTRAINT "Order_pkey" PRIMARY KEY (id)
 )
-WITH (
-    OIDS = FALSE
-)
 TABLESPACE pg_default;
 
-ALTER TABLE public."Order"
+ALTER TABLE public.order
     OWNER to postgres;
 
 
-CREATE TABLE public."OrderItems"
+CREATE TABLE public.orderitems
 (
     order_id integer NOT NULL,
     item_id integer NOT NULL,
     "number" integer NOT NULL,
-    CONSTRAINT "OrderItems_pkey" PRIMARY KEY (order_id, item_id)
-)
-WITH (
-    OIDS = FALSE
+    CONSTRAINT "OrderItems_pkey" PRIMARY KEY (order_id, item_id),
+    FOREIGN KEY (order_id) REFERENCES public.order(id)
 )
 TABLESPACE pg_default;
 
-ALTER TABLE public."OrderItems"
+ALTER TABLE public.orderitems
     OWNER to postgres;
