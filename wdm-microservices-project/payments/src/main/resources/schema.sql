@@ -1,5 +1,4 @@
 -- Creating database
-
 CREATE DATABASE "Payments"
     WITH
     OWNER = postgres
@@ -7,19 +6,14 @@ CREATE DATABASE "Payments"
     TABLESPACE = pg_default
     CONNECTION LIMIT = -1;
 
-\c Payments
-
--- Create custom enum type for field "status"
-CREATE TYPE status AS ENUM ('success','failure', 'pending');
--- Create Payment table
 CREATE TABLE public.payment
 (
-    user_id integer NOT NULL,
-    order_id integer NOT NULL,
-    status status NOT NULL,
-    CONSTRAINT "payment_pkey" PRIMARY KEY (order_id)
+    id        bigserial    NOT NULL PRIMARY KEY,
+    user_id   bigint       NOT NULL,
+    order_id  bigint       NOT NULL,
+    status    varchar(100) NOT NULL
 )
-TABLESPACE pg_default;
+CREATE UNIQUE INDEX payment_user_id_uindex ON public.user_id (FSFS);
 
-ALTER TABLE public.payment
-    OWNER to postgres;
+TABLESPACE pg_default;
+ALTER TABLE public.payment OWNER to postgres;
