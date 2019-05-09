@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import wdm.project.dto.User;
 import wdm.project.exception.UnsufficientCreditException;
+import wdm.project.exception.UserNotFoundException;
 import wdm.project.repository.UsersRepository;
 
 @Service
@@ -45,7 +46,7 @@ public class UsersService {
      */
     public void updateUser(Long id, User requestUser) {
         User storedUser = findUser(id);
-        Long requestCredit = requestUser.getCredit();
+        Integer requestCredit = requestUser.getCredit();
         storedUser.setCredit(requestCredit);
         usersRepository.save(storedUser);
     }
@@ -63,7 +64,7 @@ public class UsersService {
         }
         boolean existsUser = usersRepository.existsById(id);
         if (!existsUser) {
-            throw new RuntimeException("There is no such user");
+            throw new UserNotFoundException(id);
         }
         return usersRepository.findById(id).orElseThrow(RuntimeException::new);
     }
@@ -74,7 +75,7 @@ public class UsersService {
      * @param id the id of the user
      * @return the credit of the user with the provided id
      */
-    public Long getUserCredit(Long id) {
+    public Integer getUserCredit(Long id) {
         User storedUser = findUser(id);
         return storedUser.getCredit();
     }
@@ -86,9 +87,9 @@ public class UsersService {
      * going to be updated
      * @param amount the amount to add to the existing credit
      */
-    public void addCredit(Long id, Long amount) {
+    public void addCredit(Long id, Integer amount) {
         User user = findUser(id);
-        long credit = user.getCredit();
+        Integer credit = user.getCredit();
         user.setCredit(credit + amount);
         usersRepository.save(user);
     }
@@ -100,9 +101,9 @@ public class UsersService {
      * going to be updated
      * @param amount the amount to remove from the existing credit
      */
-    public void subtractCredit(Long id, Long amount) {
+    public void subtractCredit(Long id, Integer amount) {
         User user = findUser(id);
-        Long credit = user.getCredit();
+        Integer credit = user.getCredit();
         if (amount > credit) {
             throw new UnsufficientCreditException(id);
         } else {

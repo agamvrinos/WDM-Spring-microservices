@@ -20,7 +20,7 @@ public class User implements Serializable {
 	private String name;
 
 	@Column(name = "credit")
-	private Long credit;
+	private Integer credit;
 
 	public User() {
 	}
@@ -41,11 +41,11 @@ public class User implements Serializable {
 		this.name = name;
 	}
 
-	public Long getCredit() {
+	public Integer getCredit() {
 		return credit;
 	}
 
-	public void setCredit(Long credit) {
+	public void setCredit(Integer credit) {
 		this.credit = credit;
 	}
 

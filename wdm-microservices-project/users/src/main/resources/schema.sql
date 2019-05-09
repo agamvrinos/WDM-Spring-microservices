@@ -1,5 +1,3 @@
--- noinspection SqlNoDataSourceInspectionForFile
-
 -- Creating database
 CREATE DATABASE "Users"
     WITH
@@ -12,7 +10,7 @@ CREATE TABLE public.user
 (
     id     bigserial  NOT NULL PRIMARY KEY,
     name   text       NOT NULL,
-    credit bigint     NOT NULL
+    credit integer    NOT NULL
 )
 TABLESPACE pg_default;
 ALTER TABLE public.user OWNER to postgres;
