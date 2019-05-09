@@ -1,15 +1,6 @@
---
--- Data for Name: user; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-INSERT INTO public."user" (id, name, credit) VALUES (3, 'Aggelos', 849.320007);
-INSERT INTO public."user" (id, name, credit) VALUES (4, 'Kyriakos', 3200);
-INSERT INTO public."user" (id, name, credit) VALUES (1, 'Max', 5338.43018);
-INSERT INTO public."user" (id, name, credit) VALUES (2, 'Jannes', 9504);
-INSERT INTO public."user" (id, name, credit) VALUES (5, 'Panos', 11378.8096);
-
-
---
--- PostgreSQL database dump complete
---
-
+/*public.user mock data*/
+INSERT INTO public."user" (name, credit) VALUES ('Aggelos', 849);
+INSERT INTO public."user" (name, credit) VALUES ('Kyriakos', 3200);
+INSERT INTO public."user" (name, credit) VALUES ('Max', 5338);
+INSERT INTO public."user" (name, credit) VALUES ('Jannes', 9504);
+INSERT INTO public."user" (name, credit) VALUES ('Panos', 11378);
