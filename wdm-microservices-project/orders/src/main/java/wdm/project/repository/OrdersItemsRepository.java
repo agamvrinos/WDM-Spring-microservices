@@ -14,5 +14,4 @@ public interface OrdersItemsRepository extends JpaRepository<OrderItem, OrderIte
 
     @Query(value = "select oi.item_id from order_items oi where oi.order_id = :oid", nativeQuery = true)
     List<Long> findAllOrderItems(@Param("oid") Long order_id);
-
 }
