@@ -5,6 +5,8 @@ import org.springframework.stereotype.Repository;
 import wdm.project.dto.Payment;
 
 @Repository
-public interface PaymentsRepository extends JpaRepository<Payment, Integer> {
+public interface PaymentsRepository extends JpaRepository<Payment, Long> {
+	Boolean existsByOrderId(Long orderId);
 
+	Payment findByOrderId(Long orderId);
 }

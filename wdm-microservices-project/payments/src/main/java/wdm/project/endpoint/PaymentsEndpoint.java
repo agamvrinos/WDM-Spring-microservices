@@ -8,12 +8,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import wdm.project.dto.Payment;
 import wdm.project.service.PaymentsService;
 
 @RestController
-@RequestMapping("/payment")
+@RequestMapping("/payments")
 public class PaymentsEndpoint {
 
     @Autowired
@@ -23,19 +24,20 @@ public class PaymentsEndpoint {
     private ObjectMapper objectMapper;
 
     @GetMapping("/status/{order_id}")
-    public JsonNode getStatus(@PathVariable("order_id") Integer orderId) {
+    public JsonNode getStatus(@PathVariable("order_id") Long orderId) {
         Payment payment = paymentsService.getPayment(orderId);
-        return objectMapper.createObjectNode().put("status", payment.getStatus().toString());
+        return objectMapper.createObjectNode().put("status", payment.getStatus());
     }
 
     @PostMapping("/pay/{order_id}")
-    public JsonNode payOrder(@PathVariable("order_id") Integer orderId, @RequestBody JsonNode body) {
-        if (!body.hasNonNull("user_id") || !body.hasNonNull("total")) {
-            throw new IllegalArgumentException();
+    public JsonNode payOrder(
+            @PathVariable("order_id") Long orderId,
+            @RequestParam("userId") Long userId,
+            @RequestParam("total") Long total) {
+        if (userId == null || total == null) {
+            throw new IllegalArgumentException("Params were not provided");
         }
-        Integer userId = body.get("user_id").asInt();
-        Integer amount = body.get("total").asInt();
-        Payment payment = paymentsService.payOrder(orderId, userId, amount);
-        return objectMapper.createObjectNode().put("status", payment.getStatus().toString());
+        Payment payment = paymentsService.payOrder(orderId, userId, total);
+        return objectMapper.createObjectNode().put("status", payment.getStatus());
     }
 }
