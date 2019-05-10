@@ -1,3 +1,5 @@
+-- noinspection SqlNoDataSourceInspectionForFile
+
 -- Creating database
 CREATE DATABASE "Users"
     WITH
@@ -5,7 +7,9 @@ CREATE DATABASE "Users"
     ENCODING = 'UTF8'
     TABLESPACE = pg_default
     CONNECTION LIMIT = -1;
+
 \c "Users"
+
 CREATE TABLE public.user
 (
     id serial NOT NULL,

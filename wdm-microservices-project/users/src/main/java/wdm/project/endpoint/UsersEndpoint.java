@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import wdm.project.dto.User;
+import wdm.project.service.UserNotFoundException;
 import wdm.project.service.UsersService;
 
 @RestController
@@ -47,8 +48,10 @@ public class UsersEndpoint {
     }
 
     @GetMapping("/credit/{id}")
-    public void getUserCredit(@PathVariable("id") Integer id) {
-        usersService.getUserCredit(id);
+    public JsonNode getUserCredit(@PathVariable("id") Integer id) {
+        User u = usersService.findUser(id).orElseThrow(
+                () -> new UserNotFoundException(id));
+        return objectMapper.createObjectNode().put("credit", u.getCredit());
     }
 
     @PostMapping("/credit/subtract/{id}/{amount}")

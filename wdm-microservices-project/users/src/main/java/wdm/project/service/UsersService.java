@@ -3,7 +3,6 @@ package wdm.project.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import wdm.project.dto.User;
-import wdm.project.endpoint.UserNotFoundException;
 import wdm.project.repository.UsersRepository;
 
 import java.util.Optional;
@@ -18,8 +17,7 @@ public class UsersService {
         User user = new User();
         user.setName(requestUser.getName());
         user.setCredit(requestUser.getCredit());
-        User inserted = usersRepository.save(user);
-        return inserted;
+        return usersRepository.save(user);
     }
 
     public void removeUser(Integer id) {
@@ -38,15 +36,26 @@ public class UsersService {
         return usersRepository.findById(id);
     }
 
-    public Double getUserCredit(Integer id) {
-        return usersRepository.getOne(id).getCredit();
-    }
+//    public Double getUserCredit(Integer id) {
+//        return usersRepository.getOne(id).getCredit();
+//    }
 
     public void addCredit(Integer id, Double amount) {
-        //TODO: implement me
+        User u = usersRepository.findById(id).orElseThrow(
+                () -> new UserNotFoundException(id));
+        u.setCredit(u.getCredit() + amount);
+        usersRepository.save(u);
     }
 
     public void subtractCredit(Integer id, Double amount) {
-        User user = usersRepository.getOne(id);
+        User u = usersRepository.findById(id).orElseThrow(
+                () -> new UserNotFoundException(id));
+        if (amount > u.getCredit()) {
+            throw new UnsufficientCreditException(id);
+        }
+        else {
+            u.setCredit(u.getCredit() - amount);
+            usersRepository.save(u);
+        }
     }
 }
