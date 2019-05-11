@@ -22,7 +22,7 @@ public class OrderItem implements Serializable {
         return id;
     }
 
-    public void setId(Integer orderId, Integer itemId) {
+    public void setId(Long orderId, Long itemId) {
         this.id.setOrderId(orderId);
         this.id.setItemId(itemId);
     }

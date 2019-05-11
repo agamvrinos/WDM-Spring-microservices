@@ -9,32 +9,32 @@ import java.util.Objects;
 public class OrderItemId implements Serializable {
 
     @Column(name = "order_id")
-    private Integer orderId;
+    private Long orderId;
 
     @Column(name = "item_id")
-    private Integer itemId;
+    private Long itemId;
 
     public OrderItemId() {
     }
 
-    public OrderItemId(Integer orderId, Integer itemId) {
+    public OrderItemId(Long orderId, Long itemId) {
         this.orderId = orderId;
         this.itemId = itemId;
     }
 
-    public Integer getOrderId() {
+    public Long getOrderId() {
         return orderId;
     }
 
-    public void setOrderId(Integer orderId) {
+    public void setOrderId(Long orderId) {
         this.orderId = orderId;
     }
 
-    public Integer getItemId() {
+    public Long getItemId() {
         return itemId;
     }
 
-    public void setItemId(Integer itemId) {
+    public void setItemId(Long itemId) {
         this.itemId = itemId;
     }
 

@@ -33,3 +33,12 @@ TABLESPACE pg_default;
 
 ALTER TABLE public.orderitems
     OWNER to postgres;
+
+
+ALTER TABLE public.order
+    ALTER COLUMN id TYPE BIGINT,
+    ALTER COLUMN user_id TYPE BIGINT;
+
+ALTER TABLE public.order_items
+    ALTER COLUMN order_id TYPE BIGINT,
+    ALTER COLUMN item_id TYPE BIGINT;

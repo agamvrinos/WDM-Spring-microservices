@@ -20,8 +20,7 @@ public class OrdersService {
         this.ordersItemsRepository = ordersItemsRepository;
     }
 
-    public Integer createOrder(Order requestOrder, Integer userId) {
-        //TODO: Items? Total?
+    public Long createOrder(Order requestOrder, Long userId) {
             Order order = new Order();
             order.setUserId(userId);
             order.setTotal(requestOrder.getTotal());
@@ -30,27 +29,28 @@ public class OrdersService {
             return  order.getId();
     }
 
-    public void removeOrder(Integer orderId){
+    public void removeOrder(Long orderId){
         ordersRepository.deleteById(orderId);
     }
 
-    public Optional<Order> findOrder(Integer orderId){
+    public Optional<Order> findOrder(Long orderId){
         return ordersRepository.findById(orderId);
     }
 
 
-    public void addItem(OrderItem requestOrderItem, Integer orderId, Integer itemId){
+    public void addItem(OrderItem requestOrderItem, Long orderId, Long itemId){
+        //TODO: Items price could be stored here when we call the stock service so we dont have to call again
         OrderItem orderItem = new  OrderItem();
         orderItem.setId(orderId, itemId);
         orderItem.setAmount(requestOrderItem.getAmount());
         ordersItemsRepository.save(orderItem);
     }
 
-    public void removeItem(Integer orderId, Integer itemId){
+    public void removeItem(Long orderId, Long itemId){
         ordersItemsRepository.deleteById(new OrderItemId(orderId, itemId));
     }
 
-    public void checkoutOrder(Integer orderId){
+    public void checkoutOrder(Long orderId){
         // TODO: connect everything
     }
 
