@@ -1,5 +1,6 @@
 package wdm.project.endpoint;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import wdm.project.dto.Order;
 import wdm.project.dto.OrderItem;
@@ -9,11 +10,8 @@ import wdm.project.service.OrdersService;
 @RequestMapping("/orders")
 public class OrdersEndpoint {
 
-    private final OrdersService ordersService;
-
-    public OrdersEndpoint(OrdersService ordersService) {
-        this.ordersService = ordersService;
-    }
+    @Autowired
+    private OrdersService ordersService;
 
     @PostMapping("/create/{user_id}")
     public Long createOrder(

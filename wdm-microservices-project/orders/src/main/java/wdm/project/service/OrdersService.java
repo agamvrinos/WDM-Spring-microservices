@@ -1,5 +1,6 @@
 package wdm.project.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import wdm.project.dto.Order;
 import wdm.project.dto.OrderItem;
@@ -12,13 +13,10 @@ import java.util.Optional;
 @Service
 public class OrdersService {
 
-    private final OrdersRepository ordersRepository;
-    private final OrdersItemsRepository ordersItemsRepository;
-
-    public OrdersService(OrdersRepository ordersRepository, OrdersItemsRepository ordersItemsRepository) {
-        this.ordersRepository = ordersRepository;
-        this.ordersItemsRepository = ordersItemsRepository;
-    }
+    @Autowired
+    private OrdersRepository ordersRepository;
+    @Autowired
+    private OrdersItemsRepository ordersItemsRepository;
 
     public Long createOrder(Order requestOrder, Long userId) {
             Order order = new Order();
