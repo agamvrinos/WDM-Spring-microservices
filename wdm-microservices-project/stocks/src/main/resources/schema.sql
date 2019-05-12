@@ -8,7 +8,7 @@ CREATE DATABASE "Stock"
 
 CREATE TABLE public.item
 (
-    id serial NOT NULL,
+    id bigserial NOT NULL,
     title text NOT NULL,
     stock integer NOT NULL,
     price real NOT NULL,
