@@ -5,5 +5,5 @@ import org.springframework.stereotype.Repository;
 import wdm.project.dto.Item;
 
 @Repository
-public interface StocksRepository extends JpaRepository<Item, Integer> {
+public interface StocksRepository extends JpaRepository<Item, Long> {
 }

@@ -13,51 +13,60 @@ import java.io.Serializable;
 public class Item implements Serializable {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	private Integer id;
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
 	@Column(name = "title")
 	private String title;
 
 	@Column(name = "stock")
-	private Double credit;
+	private Integer stock;
 
-	@Column(name = "credit")
-	private Double credit;
+	@Column(name = "price")
+	private Double price;
 
 	public Item() {
 	}
 
-	public Integer getId() {
+	public Long getId() {
 		return id;
 	}
 
-	public void setId(Integer id) {
+	public void setId(Long id) {
 		this.id = id;
 	}
 
-	public String getName() {
-		return name;
+	public String getTitle() {
+		return title;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public Integer getStock() {
+        return stock;
+    }
+
+    public void setStock(Integer stock) {
+        this.stock = stock;
+    }
+
+    public Double getPrice() {
+		return price;
 	}
 
-	public Double getCredit() {
-		return credit;
-	}
-
-	public void setCredit(Double credit) {
-		this.credit = credit;
+	public void setPrice(Double price) {
+		this.price = price;
 	}
 
 	@Override
 	public String toString() {
-		return "User{" +
+		return "Item{" +
 				"id=" + id +
-				", name='" + name + '\'' +
-				", credit=" + credit +
+				", title='" + title + '\'' +
+                ", stock=" + stock +
+				", price=" + price +
 				'}';
 	}
 }
