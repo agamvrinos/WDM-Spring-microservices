@@ -2,14 +2,14 @@ package wdm.project.service;
 
 public class UnsufficientCreditException extends RuntimeException {
 
-    private int uid;
+    private long uid;
 
-    public UnsufficientCreditException(int userId) {
+    public UnsufficientCreditException(long userId) {
         super(String.format("user %d has unsufficient credit", userId));
         uid = userId;
     }
 
-    public int getUid() {
+    public long getUid() {
         return uid;
     }
 }
