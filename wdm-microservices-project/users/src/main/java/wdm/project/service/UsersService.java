@@ -20,11 +20,11 @@ public class UsersService {
         return usersRepository.save(user);
     }
 
-    public void removeUser(Integer id) {
+    public void removeUser(Long id) {
         usersRepository.deleteById(id);
     }
 
-    public void updateUser(Integer id, User user) {
+    public void updateUser(Long id, User user) {
         User update = new User();
         user.setId(id);
         user.setCredit(user.getCredit());
@@ -32,7 +32,7 @@ public class UsersService {
         usersRepository.save(update);
     }
 
-    public Optional<User> findUser(Integer id) {
+    public Optional<User> findUser(Long id) {
         return usersRepository.findById(id);
     }
 
@@ -40,14 +40,14 @@ public class UsersService {
 //        return usersRepository.getOne(id).getCredit();
 //    }
 
-    public void addCredit(Integer id, Double amount) {
+    public void addCredit(Long id, Long amount) {
         User u = usersRepository.findById(id).orElseThrow(
                 () -> new UserNotFoundException(id));
         u.setCredit(u.getCredit() + amount);
         usersRepository.save(u);
     }
 
-    public void subtractCredit(Integer id, Double amount) {
+    public void subtractCredit(Long id, Long amount) {
         User u = usersRepository.findById(id).orElseThrow(
                 () -> new UserNotFoundException(id));
         if (amount > u.getCredit()) {

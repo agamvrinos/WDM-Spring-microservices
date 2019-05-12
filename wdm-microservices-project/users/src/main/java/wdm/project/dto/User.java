@@ -14,22 +14,22 @@ public class User implements Serializable {
 
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Integer id;
+	private Long id;
 
 	@Column(name = "name")
 	private String name;
 
 	@Column(name = "credit")
-	private Double credit;
+	private Long credit;
 
 	public User() {
 	}
 
-	public Integer getId() {
+	public Long getId() {
 		return id;
 	}
 
-	public void setId(Integer id) {
+	public void setId(Long id) {
 		this.id = id;
 	}
 
@@ -41,11 +41,11 @@ public class User implements Serializable {
 		this.name = name;
 	}
 
-	public Double getCredit() {
+	public Long getCredit() {
 		return credit;
 	}
 
-	public void setCredit(Double credit) {
+	public void setCredit(Long credit) {
 		this.credit = credit;
 	}
 

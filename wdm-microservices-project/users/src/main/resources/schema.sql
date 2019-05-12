@@ -12,9 +12,9 @@ CREATE DATABASE "Users"
 
 CREATE TABLE public.user
 (
-    id serial NOT NULL,
+    id bigserial NOT NULL,
     name text NOT NULL,
-    credit real NOT NULL,
+    credit bigint NOT NULL,
     CONSTRAINT "User_pkey" PRIMARY KEY (id)
 )
 TABLESPACE pg_default;

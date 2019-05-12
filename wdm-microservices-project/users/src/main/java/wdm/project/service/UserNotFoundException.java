@@ -1,14 +1,14 @@
 package wdm.project.service;
 
 public class UserNotFoundException extends RuntimeException {
-    private int uid;
+    private long uid;
 
-    public UserNotFoundException(Integer id) {
+    public UserNotFoundException(long id) {
         super("could not find user " + id);
         uid = id;
     }
 
-    public int getUid() {
+    public long getUid() {
         return uid;
     }
 }

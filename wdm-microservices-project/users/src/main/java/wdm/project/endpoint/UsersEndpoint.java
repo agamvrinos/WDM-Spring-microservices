@@ -27,28 +27,28 @@ public class UsersEndpoint {
 
     @PostMapping("/create")
     public JsonNode createUser(@RequestBody User requestUser) {
-        int userId = usersService.createUser(requestUser).getId();
+        long userId = usersService.createUser(requestUser).getId();
         return objectMapper.createObjectNode().put("id", userId);
     }
 
     @DeleteMapping("/remove/{id}")
-    public void removeUser(@PathVariable("id") Integer id) {
+    public void removeUser(@PathVariable("id") Long id) {
         usersService.removeUser(id);
     }
 
     @PutMapping("/update/{id}")
-    public void updateUser(@PathVariable("id") Integer id, @RequestBody User user) {
+    public void updateUser(@PathVariable("id") Long id, @RequestBody User user) {
         usersService.updateUser(id, user);
     }
 
     @GetMapping("/find/{id}")
-    public User findUser(@PathVariable("id") Integer id) {
+    public User findUser(@PathVariable("id") Long id) {
 		return usersService.findUser(id).orElseThrow(
                 () -> new UserNotFoundException(id));
     }
 
     @GetMapping("/credit/{id}")
-    public JsonNode getUserCredit(@PathVariable("id") Integer id) {
+    public JsonNode getUserCredit(@PathVariable("id") Long id) {
         User u = usersService.findUser(id).orElseThrow(
                 () -> new UserNotFoundException(id));
         return objectMapper.createObjectNode().put("credit", u.getCredit());
@@ -56,17 +56,17 @@ public class UsersEndpoint {
 
     @PostMapping("/credit/subtract/{id}/{amount}")
     public void subtractCredit(
-            @PathVariable("id") Integer id,
+            @PathVariable("id") Long id,
             @PathVariable("amount") String amount
     ) {
-        usersService.subtractCredit(id, Double.parseDouble(amount));
+        usersService.subtractCredit(id, Long.parseLong(amount));
     }
 
     @PostMapping("/credit/add/{id}/{amount}")
     public void addCredit(
-            @PathVariable("id") Integer id,
+            @PathVariable("id") Long id,
             @PathVariable("amount") String amount
     ) {
-        usersService.addCredit(id, Double.parseDouble(amount));
+        usersService.addCredit(id, Long.parseLong(amount));
     }
 }
