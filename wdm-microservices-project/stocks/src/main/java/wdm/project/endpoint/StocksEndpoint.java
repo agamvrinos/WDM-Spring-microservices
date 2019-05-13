@@ -1,10 +1,7 @@
 package wdm.project.endpoint;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import wdm.project.dto.Item;
 import wdm.project.service.StocksService;
 
@@ -17,17 +14,26 @@ public class StocksEndpoint {
 
 	@GetMapping("/item/{id}")
     public Item getItem(@PathVariable("id") Long itemId) {
-        return stocksService.getItemAvailability(itemId).orElseThrow(
-                () -> new ItemNotFoundException(itemId));
+        return stocksService.getItem(itemId);
     }
 
     @GetMapping("/availability/{id}")
-    public Item getItemAvailability(@PathVariable("id") Long itemId) {
-        return stocksService.getItemAvailability(itemId).orElseThrow(
-                () -> new ItemNotFoundException(itemId));
+    public Integer getItemAvailability(@PathVariable("id") Long itemId) {
+        return stocksService.getItemAvailability(itemId);
     }
 
-    public class ItemNotFoundException extends RuntimeException {
-        ItemNotFoundException(Long id) {super("Item with id: " + id+ " does not exist");}
+    @PostMapping("/item/create/")
+    public Long createItem(@RequestBody Item requestItem) {
+        return stocksService.createItem(requestItem);
+    }
+
+    @PostMapping("/add/{item_id}/{number}")
+    public void addItem(@PathVariable("item_id") Long itemId, @PathVariable("number") Integer itemNumber) {
+        stocksService.addItem(itemId, itemNumber);
+    }
+
+    @PostMapping("/subtract/{item_id}/{number}")
+    public void subtractItem(@PathVariable("item_id") Long itemId, @PathVariable("number") Integer itemNumber) {
+        stocksService.subtractItem(itemId, itemNumber);
     }
 }
