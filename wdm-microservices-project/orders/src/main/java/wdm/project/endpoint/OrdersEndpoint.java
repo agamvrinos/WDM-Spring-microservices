@@ -17,24 +17,17 @@ public class OrdersEndpoint {
     public Long createOrder(
             @RequestBody Order requestOrder,
             @PathVariable("user_id") Long userId
-    ) {
-
-        try{ return ordersService.createOrder(requestOrder, userId);} catch (RuntimeException exc) {
-            // TODO: Check if resource already exists
-            throw new RuntimeException("Unable to create new order for user: " + userId + "(user_id)");
-        }
+    ) throws  RuntimeException{
+        return ordersService.createOrder(requestOrder, userId);
     }
 
     @DeleteMapping("/remove/{order_id}")
-    public void removeOrder(@PathVariable("order_id") Long orderId) {
-        try{ ordersService.removeOrder(orderId); } catch (RuntimeException exc){
-            // TODO: Check if resource does not exist
-            throw new RuntimeException("Unable to delete order: "+orderId+"(order_id)");
-        }
+    public void removeOrder(@PathVariable("order_id") Long orderId) throws RuntimeException {
+        ordersService.removeOrder(orderId);
     }
 
     @GetMapping("/find/{order_id}")
-    public Order findOrder(@PathVariable("order_id") Long orderId) {
+    public Order findOrder(@PathVariable("order_id") Long orderId) throws OrderNotFoundException {
         return ordersService.findOrder(orderId).orElseThrow(
                 () -> new OrderNotFoundException(orderId));
     }
@@ -44,23 +37,16 @@ public class OrdersEndpoint {
             @RequestBody OrderItem requestOrderItem,
             @PathVariable("order_id") Long orderId,
             @PathVariable("item_id") Long itemId
-    ) {
-        try{ ordersService.addItem(requestOrderItem, orderId, itemId); } catch (RuntimeException exc){
-            // TODO: Check if resource already exists
-            throw new RuntimeException("Unable to add item: "+itemId+"(item_id) to order: "+orderId+"(order_id)");
-        }
+    ) throws RuntimeException {
+        ordersService.addItem(requestOrderItem, orderId, itemId);
     }
 
     @DeleteMapping("/removeItem/{order_id}/{item_id}")
     public void removeItem(
             @PathVariable("order_id") Long orderId,
             @PathVariable("item_id") Long itemId
-    ) {
-        try{ ordersService.removeItem(orderId, itemId); } catch (RuntimeException exc){
-            // TODO: Check if resource does not exist
-            throw new RuntimeException("Unable to remove item: "+itemId+"(item_id) from order: "+orderId+"(order_id)");
-        }
-
+    ) throws RuntimeException {
+        ordersService.removeItem(orderId, itemId);
     }
 
     @PostMapping("/orders/checkout/{order_id}")
