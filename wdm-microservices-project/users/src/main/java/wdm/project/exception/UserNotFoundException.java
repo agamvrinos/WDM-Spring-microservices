@@ -1,4 +1,4 @@
-package wdm.project.service;
+package wdm.project.exception;
 
 public class UserNotFoundException extends RuntimeException {
     private long uid;

@@ -3,9 +3,8 @@ package wdm.project.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import wdm.project.dto.User;
+import wdm.project.exception.UnsufficientCreditException;
 import wdm.project.repository.UsersRepository;
-
-import java.util.Optional;
 
 @Service
 public class UsersService {
@@ -13,6 +12,13 @@ public class UsersService {
     @Autowired
     private UsersRepository usersRepository;
 
+    /**
+     * Creates a new user.
+     *
+     * @param requestUser a user object containing the information
+     * to be stored
+     * @return the created user
+     */
     public User createUser(User requestUser) {
         User user = new User();
         user.setName(requestUser.getName());
@@ -20,42 +26,88 @@ public class UsersService {
         return usersRepository.save(user);
     }
 
+    /**
+     * Removes the user of the provided id.
+     *
+     * @param id the id of the user to be removed
+     */
     public void removeUser(Long id) {
-        usersRepository.deleteById(id);
+        User storedUser = findUser(id);
+        usersRepository.delete(storedUser);
     }
 
-    public void updateUser(Long id, User user) {
-        User update = new User();
-        user.setId(id);
-        user.setCredit(user.getCredit());
-        user.setName(user.getName());
-        usersRepository.save(update);
+    /**
+     * Updates the {@code credit} of the user with the provided id.
+     *
+     * @param id the id of the user to be updates
+     * @param requestUser a user object that contains the new
+     * {@code credit} value
+     */
+    public void updateUser(Long id, User requestUser) {
+        User storedUser = findUser(id);
+        Long requestCredit = requestUser.getCredit();
+        storedUser.setCredit(requestCredit);
+        usersRepository.save(storedUser);
     }
 
-    public Optional<User> findUser(Long id) {
-        return usersRepository.findById(id);
-    }
-
-//    public Double getUserCredit(Integer id) {
-//        return usersRepository.getOne(id).getCredit();
-//    }
-
-    public void addCredit(Long id, Long amount) {
-        User u = usersRepository.findById(id).orElseThrow(
-                () -> new UserNotFoundException(id));
-        u.setCredit(u.getCredit() + amount);
-        usersRepository.save(u);
-    }
-
-    public void subtractCredit(Long id, Long amount) {
-        User u = usersRepository.findById(id).orElseThrow(
-                () -> new UserNotFoundException(id));
-        if (amount > u.getCredit()) {
-            throw new UnsufficientCreditException(id);
+    /**
+     * Finds the user with the provided id.
+     *
+     * @param id the id of the user to be fetched
+     * @return the user object with the provided i
+     * @throws RuntimeException in case of invalid id
+     */
+    public User findUser(Long id) throws RuntimeException {
+        if (id == null) {
+            throw new RuntimeException("Id was not provided");
         }
-        else {
-            u.setCredit(u.getCredit() - amount);
-            usersRepository.save(u);
+        boolean existsUser = usersRepository.existsById(id);
+        if (!existsUser) {
+            throw new RuntimeException("There is no such user");
+        }
+        return usersRepository.findById(id).orElseThrow(RuntimeException::new);
+    }
+
+    /**
+     * Returns the {@code credit} of the user with the provided id.
+     *
+     * @param id the id of the user
+     * @return the credit of the user with the provided id
+     */
+    public Long getUserCredit(Long id) {
+        User storedUser = findUser(id);
+        return storedUser.getCredit();
+    }
+
+    /**
+     * Adds credit to the user of the provided id.
+     *
+     * @param id the id of the user, the credit of which is
+     * going to be updated
+     * @param amount the amount to add to the existing credit
+     */
+    public void addCredit(Long id, Long amount) {
+        User user = findUser(id);
+        long credit = user.getCredit();
+        user.setCredit(credit + amount);
+        usersRepository.save(user);
+    }
+
+    /**
+     * Removed credit from the user of the provided id.
+     *
+     * @param id the id of the user, the credit of which is
+     * going to be updated
+     * @param amount the amount to remove from the existing credit
+     */
+    public void subtractCredit(Long id, Long amount) {
+        User user = findUser(id);
+        Long credit = user.getCredit();
+        if (amount > credit) {
+            throw new UnsufficientCreditException(id);
+        } else {
+            user.setCredit(credit - amount);
+            usersRepository.save(user);
         }
     }
 }

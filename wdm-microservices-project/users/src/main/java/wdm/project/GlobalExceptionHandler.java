@@ -6,8 +6,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
-import wdm.project.service.UnsufficientCreditException;
-import wdm.project.service.UserNotFoundException;
+import wdm.project.exception.UnsufficientCreditException;
+import wdm.project.exception.UserNotFoundException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -47,6 +47,4 @@ public class GlobalExceptionHandler {
                                                                HttpStatus status, WebRequest request) {
         return new ResponseEntity<>(String.format("User %d not found", unfe.getUid()), status);
     }
-
-
 }
