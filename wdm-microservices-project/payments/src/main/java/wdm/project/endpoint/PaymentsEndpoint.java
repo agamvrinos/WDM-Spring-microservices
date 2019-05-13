@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -24,8 +23,8 @@ public class PaymentsEndpoint {
     private ObjectMapper objectMapper;
 
     @GetMapping("/status/{order_id}")
-    public JsonNode getStatus(@PathVariable("order_id") Long orderId) {
-        Payment payment = paymentsService.getPayment(orderId);
+    public JsonNode getPaymentStatus(@PathVariable("order_id") Long orderId) {
+        Payment payment = paymentsService.getPaymentByOrderId(orderId);
         return objectMapper.createObjectNode().put("status", payment.getStatus());
     }
 

@@ -1,4 +1,4 @@
-package wdm.project.endpoint;
+package wdm.project.exception;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;

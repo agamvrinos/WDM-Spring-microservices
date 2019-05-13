@@ -15,16 +15,28 @@ public class PaymentsService {
     @Autowired
     private PaymentsRepository paymentsRepository;
 
-    public Payment getPayment(Long orderId) {
+    /**
+     * Returns the payment instance that corresponds to the
+     * order with the provided {@code orderId}. In case there is no
+     * payment instance for the particular {@code orderId} a mock
+     * payment with "Pending" status is returned.
+     *
+     * @param orderId the id of the order
+     * @return the Payment with the provided order id or a mock
+     * "Pending" payment
+     */
+    public Payment getPaymentByOrderId(Long orderId) {
+        if (orderId == null) {
+            throw new RuntimeException("Id was not provided");
+        }
         Payment payment;
-        if (paymentsRepository.existsByOrderId(orderId)) {
+        Boolean exists = paymentsRepository.existsByOrderId(orderId);
+        if (exists) {
             payment = paymentsRepository.findByOrderId(orderId);
         } else {
-            //TODO: Shouldn't we also store the user_id???
             payment = new Payment();
             payment.setOrderId(orderId);
             payment.setStatus(Status.PENDING.getValue());
-            payment = paymentsRepository.save(payment);
         }
         return payment;
     }
@@ -37,6 +49,7 @@ public class PaymentsService {
         String paymentStatus = Status.FAILURE.getValue();
         try {
             RestTemplate re = new RestTemplate();
+            //TODO: Update communication
             JsonNode response = re.postForObject("http://localhost:8083/users/credit/subtract/" + userId + "/" + totalPrice, null, JsonNode.class);
             String responseStatus = response.get("status").asText();
             if (responseStatus != null) {
