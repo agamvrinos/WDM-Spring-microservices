@@ -37,7 +37,8 @@ public class PaymentsEndpoint {
             throw new IllegalArgumentException("Params were not provided");
         }
         Payment payment = paymentsService.payOrder(orderId, userId, total);
-        if (Status.findStatusEnum(payment.getStatus()).equals(Status.SUCCESS)) {
+        Status statusEnum = Status.findStatusEnum(payment.getStatus());
+        if (statusEnum != Status.SUCCESS) {
             // TODO: Return 400
             throw new RuntimeException();
         }
