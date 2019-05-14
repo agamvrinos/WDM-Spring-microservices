@@ -8,13 +8,11 @@ CREATE DATABASE "Stock"
 
 CREATE TABLE public.item
 (
-    id serial NOT NULL,
-    title text NOT NULL,
-    stock integer NOT NULL,
-    price real NOT NULL,
-    CONSTRAINT "Item_pkey" PRIMARY KEY (id)
+    id    bigserial    NOT NULL PRIMARY KEY,
+    title varchar(100) NOT NULL,
+    stock integer      NOT NULL,
+    price real         NOT NULL
 )
-TABLESPACE pg_default;
 
-ALTER TABLE public.item
-    OWNER to postgres;
+TABLESPACE pg_default;
+ALTER TABLE public.item OWNER to postgres;

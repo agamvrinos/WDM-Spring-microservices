@@ -1,7 +1,4 @@
---
--- Data for Name: item; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
+/*public.item mock data*/
 INSERT INTO public."item" (id, title, stock, price) VALUES (1, 'MacBook Pro 13"', 5, 1299.98999);
 INSERT INTO public."item" (id, title, stock, price) VALUES (2, 'Apple iPhone 8 Plus (64GB)', 38, 593.969971);
 INSERT INTO public."item" (id, title, stock, price) VALUES (3, 'Victesse Melville N7 HM 300 2019 Lage Instap', 7, 1699);
@@ -16,9 +13,3 @@ INSERT INTO public."item" (id, title, stock, price) VALUES (11, 'Palit GeForce R
 INSERT INTO public."item" (id, title, stock, price) VALUES (12, 'Intel Core i5-9600K', 93, 255);
 INSERT INTO public."item" (id, title, stock, price) VALUES (13, 'Fractal Design Define R6', 47, 142.759995);
 INSERT INTO public."item" (id, title, stock, price) VALUES (14, 'Intel Core i7-9700K', 58, 405);
-
-
---
--- PostgreSQL database dump complete
---
-
