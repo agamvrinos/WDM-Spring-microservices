@@ -42,5 +42,4 @@ public class OrderItem implements Serializable {
                 ", amount=" + this.amount +
                 '}';
     }
-
 }
