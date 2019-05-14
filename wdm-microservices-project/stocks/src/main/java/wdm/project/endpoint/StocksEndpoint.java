@@ -1,5 +1,7 @@
 package wdm.project.endpoint;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import wdm.project.dto.Item;
@@ -12,19 +14,24 @@ public class StocksEndpoint {
     @Autowired
     private StocksService stocksService;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
 	@GetMapping("/item/{id}")
     public Item getItem(@PathVariable("id") Long itemId) {
         return stocksService.getItem(itemId);
     }
 
     @GetMapping("/availability/{id}")
-    public Integer getItemAvailability(@PathVariable("id") Long itemId) {
-        return stocksService.getItemAvailability(itemId);
+    public JsonNode getItemAvailability(@PathVariable("id") Long itemId) {
+        Integer availability = stocksService.getItemAvailability(itemId);
+        return objectMapper.createObjectNode().put("stock", availability);
     }
 
     @PostMapping("/item/create/")
-    public Long createItem(@RequestBody Item requestItem) {
-        return stocksService.createItem(requestItem);
+    public JsonNode createItem(@RequestBody Item requestItem) {
+        Long itemId = stocksService.createItem(requestItem);
+        return objectMapper.createObjectNode().put("id", itemId);
     }
 
     @PostMapping("/add/{item_id}/{number}")
