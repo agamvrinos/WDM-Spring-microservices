@@ -27,7 +27,6 @@ public class OrderItem implements Serializable {
         this.id.setItemId(itemId);
     }
 
-
     public Integer getAmount() {
         return amount;
     }

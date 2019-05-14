@@ -1,9 +1,11 @@
 package wdm.project.endpoint;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import wdm.project.dto.Order;
 import wdm.project.dto.OrderItem;
+import wdm.project.dto.OrdersWrapper;
 import wdm.project.service.OrdersService;
 
 @RestController
@@ -13,12 +15,12 @@ public class OrdersEndpoint {
     @Autowired
     private OrdersService ordersService;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @PostMapping("/create/{user_id}")
-    public Long createOrder(
-            @RequestBody Order requestOrder,
-            @PathVariable("user_id") Long userId
-    ) throws  RuntimeException{
-        return ordersService.createOrder(requestOrder, userId);
+    public JsonNode createOrder(@PathVariable("user_id") Long userId) throws  RuntimeException{
+        return objectMapper.createObjectNode().put("order_id", ordersService.createOrder(userId));
     }
 
     @DeleteMapping("/remove/{order_id}")
@@ -27,9 +29,8 @@ public class OrdersEndpoint {
     }
 
     @GetMapping("/find/{order_id}")
-    public Order findOrder(@PathVariable("order_id") Long orderId) throws OrderNotFoundException {
-        return ordersService.findOrder(orderId).orElseThrow(
-                () -> new OrderNotFoundException(orderId));
+    public OrdersWrapper findOrder(@PathVariable("order_id") Long orderId) throws RuntimeException {
+        return ordersService.findOrder(orderId);
     }
 
     @PostMapping("/addItem/{order_id}/{item_id}")
@@ -38,6 +39,7 @@ public class OrdersEndpoint {
             @PathVariable("order_id") Long orderId,
             @PathVariable("item_id") Long itemId
     ) throws RuntimeException {
+        // TODO call stock service for item information and not @RequestBody
         ordersService.addItem(requestOrderItem, orderId, itemId);
     }
 
@@ -50,12 +52,8 @@ public class OrdersEndpoint {
     }
 
     @PostMapping("/orders/checkout/{order_id}")
-    public void checkoutOrder(@PathVariable("order_id") Long orderId) {
-        ordersService.checkoutOrder(orderId);
+    public JsonNode checkoutOrder(@PathVariable("order_id") Long orderId) {
+        // TODO call everything
+        return objectMapper.createObjectNode().put("status", ordersService.checkoutOrder(orderId));
     }
-
-    public class OrderNotFoundException extends RuntimeException {
-        OrderNotFoundException(Long id) {super("Order with id: " + id+ " does not exist");}
-    }
-
 }

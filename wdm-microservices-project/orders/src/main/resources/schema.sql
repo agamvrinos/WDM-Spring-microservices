@@ -23,9 +23,9 @@ ALTER TABLE public.order
 
 CREATE TABLE public.orderitems
 (
-    order_id integer NOT NULL,
-    item_id integer NOT NULL,
-    "number" integer NOT NULL,
+    order_id    integer NOT NULL,
+    item_id     integer NOT NULL,
+    "number"    integer NOT NULL,
     CONSTRAINT "OrderItems_pkey" PRIMARY KEY (order_id, item_id),
     FOREIGN KEY (order_id) REFERENCES public.order(id)
 )
@@ -42,3 +42,6 @@ ALTER TABLE public.order
 ALTER TABLE public.order_items
     ALTER COLUMN order_id TYPE BIGINT,
     ALTER COLUMN item_id TYPE BIGINT;
+
+ALTER TABLE public.order
+    ALTER COLUMN total TYPE INT;

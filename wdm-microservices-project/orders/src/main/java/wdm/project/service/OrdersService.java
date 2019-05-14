@@ -5,10 +5,9 @@ import org.springframework.stereotype.Service;
 import wdm.project.dto.Order;
 import wdm.project.dto.OrderItem;
 import wdm.project.dto.OrderItemId;
+import wdm.project.dto.OrdersWrapper;
 import wdm.project.repository.OrdersItemsRepository;
 import wdm.project.repository.OrdersRepository;
-
-import java.util.Optional;
 
 @Service
 public class OrdersService {
@@ -18,12 +17,11 @@ public class OrdersService {
     @Autowired
     private OrdersItemsRepository ordersItemsRepository;
 
-    public Long createOrder(Order requestOrder, Long userId) {
+    public Long createOrder(Long userId) {
         try{
-
             Order order = new Order();
             order.setUserId(userId);
-            order.setTotal(requestOrder.getTotal());
+            order.setTotal(0);
             ordersRepository.save(order);
 
             return  order.getId();
@@ -42,8 +40,18 @@ public class OrdersService {
         }
     }
 
-    public Optional<Order> findOrder(Long orderId){
-        return ordersRepository.findById(orderId);
+    public OrdersWrapper findOrder(Long orderId){
+
+        OrdersWrapper ordersWrapper = new OrdersWrapper();
+
+        Order order  = ordersRepository.findById(orderId).orElseThrow(
+                () -> new OrderNotFoundException(orderId));
+
+        ordersWrapper.setOrderItems(ordersItemsRepository.findAllOrderItems(orderId));
+        ordersWrapper.setPaymentStatus("SUCCESSFUL"); // TODO call the payment microservice for that
+        ordersWrapper.setUserId(order.getUserId());
+
+        return ordersWrapper;
     }
 
     public void addItem(OrderItem requestOrderItem, Long orderId, Long itemId){
@@ -68,8 +76,13 @@ public class OrdersService {
         }
     }
 
-    public void checkoutOrder(Long orderId){
+    public String checkoutOrder(Long orderId){
         // TODO: connect everything
+        return "FAILURE";
+    }
+
+    public class OrderNotFoundException extends RuntimeException {
+        OrderNotFoundException(Long id) {super("Order with id: " + id+ " does not exist");}
     }
 
 }

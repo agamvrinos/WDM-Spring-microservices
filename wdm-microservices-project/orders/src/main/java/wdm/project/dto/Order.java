@@ -20,7 +20,7 @@ public class Order implements Serializable {
     private Long userId;
 
     @Column(name = "total")
-    private Double total;
+    private Integer total;
 
     public Order(){
 
@@ -42,11 +42,11 @@ public class Order implements Serializable {
         this.userId = userId;
     }
 
-    public Double getTotal() {
+    public Integer getTotal() {
         return total;
     }
 
-    public void setTotal(Double total) {
+    public void setTotal(Integer total) {
         this.total = total;
     }
 
