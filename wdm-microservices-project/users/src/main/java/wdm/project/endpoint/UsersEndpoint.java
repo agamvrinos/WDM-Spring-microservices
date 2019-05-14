@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import wdm.project.dto.User;
+import wdm.project.exception.UsersException;
 import wdm.project.service.UsersService;
 
 @RestController
@@ -31,22 +32,22 @@ public class UsersEndpoint {
     }
 
     @DeleteMapping("/remove/{id}")
-    public void removeUser(@PathVariable("id") Long id) {
+    public void removeUser(@PathVariable("id") Long id) throws UsersException {
         usersService.removeUser(id);
     }
 
     @PutMapping("/update/{id}")
-    public void updateUser(@PathVariable("id") Long id, @RequestBody User user) {
+    public void updateUser(@PathVariable("id") Long id, @RequestBody User user) throws UsersException {
         usersService.updateUser(id, user);
     }
 
     @GetMapping("/find/{id}")
-    public User findUser(@PathVariable("id") Long id) {
+    public User findUser(@PathVariable("id") Long id) throws UsersException {
 		return usersService.findUser(id);
     }
 
     @GetMapping("/credit/{id}")
-    public JsonNode getUserCredit(@PathVariable("id") Long id) {
+    public JsonNode getUserCredit(@PathVariable("id") Long id) throws UsersException {
         Integer credit = usersService.getUserCredit(id);
         return objectMapper.createObjectNode().put("credit", credit);
     }
@@ -55,7 +56,7 @@ public class UsersEndpoint {
     public void subtractCredit(
             @PathVariable("id") Long id,
             @PathVariable("amount") String amount
-    ) {
+    ) throws UsersException {
         usersService.subtractCredit(id, Integer.parseInt(amount));
     }
 
@@ -63,7 +64,7 @@ public class UsersEndpoint {
     public void addCredit(
             @PathVariable("id") Long id,
             @PathVariable("amount") String amount
-    ) {
+    ) throws UsersException {
         usersService.addCredit(id, Integer.parseInt(amount));
     }
 }

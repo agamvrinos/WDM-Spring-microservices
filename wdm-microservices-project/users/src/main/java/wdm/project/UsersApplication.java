@@ -16,16 +16,4 @@ public class UsersApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(UsersApplication.class, args);
 	}
-
-//	@Bean
-//	public Jackson2ObjectMapperBuilder jacksonBuilder() {
-//		final Jackson2ObjectMapperBuilder mapperBuilder = new Jackson2ObjectMapperBuilder();
-//		mapperBuilder.propertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
-//		mapperBuilder.serializationInclusion(JsonInclude.Include.NON_NULL);
-//		// Set the dateformat to the ISO 8601 standard
-//		final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ROOT);
-//		mapperBuilder.dateFormat(dateFormat);
-//
-//		return mapperBuilder;
-//	}
 }
