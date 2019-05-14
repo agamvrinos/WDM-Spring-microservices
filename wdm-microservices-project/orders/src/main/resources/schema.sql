@@ -7,29 +7,23 @@ CREATE DATABASE "Orders"
     TABLESPACE = pg_default
     CONNECTION LIMIT = -1;
 
--- Creating database tables
+/* public.order table*/
 CREATE TABLE public.order
 (
-    id serial NOT NULL ,
-    user_id integer NOT NULL,
-    total real NOT NULL,
-    CONSTRAINT "Order_pkey" PRIMARY KEY (id)
+    id      bigserial NOT NULL PRIMARY KEY,
+    user_id bigint    NOT NULL,
+    total   real      NOT NULL
 )
-TABLESPACE pg_default;
-
-ALTER TABLE public.order
-    OWNER to postgres;
-
-
-CREATE TABLE public.orderitems
+/* public.order_items table*/
+CREATE TABLE public.order_items
 (
-    order_id integer NOT NULL,
-    item_id integer NOT NULL,
-    "number" integer NOT NULL,
+    order_id  bigint  NOT NULL,
+    item_id   bigint  NOT NULL,
+    "number"  integer NOT NULL,
     CONSTRAINT "OrderItems_pkey" PRIMARY KEY (order_id, item_id),
     FOREIGN KEY (order_id) REFERENCES public.order(id)
 )
 TABLESPACE pg_default;
-
-ALTER TABLE public.orderitems
-    OWNER to postgres;
+ALTER TABLE public.order_items OWNER to postgres;
+TABLESPACE pg_default;
+ALTER TABLE public.order OWNER to postgres;
