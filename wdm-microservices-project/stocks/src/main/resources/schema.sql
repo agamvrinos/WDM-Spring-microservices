@@ -11,7 +11,7 @@ CREATE TABLE public.item
     id    bigserial    NOT NULL PRIMARY KEY,
     title varchar(100) NOT NULL,
     stock integer      NOT NULL,
-    price integer         NOT NULL
+    price integer      NOT NULL
 )
 
 TABLESPACE pg_default;
