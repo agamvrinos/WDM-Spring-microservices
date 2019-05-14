@@ -18,10 +18,9 @@ public class OrdersService {
     private OrdersItemsRepository ordersItemsRepository;
 
     /**
-     * Initializes an order in the micro-service's database
-     * with zero total and a given user id that
-     * corresponds to the user this order is linked to.
-     * Returns the id of the order that is created.
+     * Initializes an order in the micro-service's database with zero
+     * total and a given user id that corresponds to the user this order
+     * is linked to. Returns the id of the order that is created.
      *
      * @param userId the id of the user this order is linked to
      * @return the id of the order that is created
@@ -41,8 +40,8 @@ public class OrdersService {
     }
 
     /**
-     * Removes an order in the micro-service's database
-     * that corresponds to a give unique order id.
+     * Removes an order in the micro-service's database that corresponds
+     * to a give unique order id.
      *
      * @param orderId the id of the order to be deleted
      */
@@ -56,12 +55,9 @@ public class OrdersService {
     }
 
     /**
-     * Finds the information of an order
-     * in the micro-service's database
-     * given an unique order id.
-     * Returns the user that this order is linked to,
-     * the ids of the items that this order has and
-     * the payment status.
+     * Finds the information of an order in the micro-service's database
+     * given an unique order id. Returns the user that this order is linked
+     * to, the ids of the items that this order has and the payment status.
      *
      * @param orderId the id of the order
      * @return the order information (user id, items' id, payment status)
@@ -83,7 +79,8 @@ public class OrdersService {
     /**
      * Adds an item to a specified order.
      *
-     * @param requestOrderItem contains the amount that of the items in the order
+     * @param requestOrderItem contains the amount that of the items
+     * in the order
      * @param itemId the id of the item
      * @param orderId the id of the order the item is linked to
      */
@@ -119,7 +116,8 @@ public class OrdersService {
      * Checks-out an order invoking every other micro-service.
      *
      * @param orderId the id of order
-     * @return the status of the transaction SUCCESS for a successful transaction
+     * @return the status of the transaction SUCCESS for a
+     * successful transaction
      * FAILURE for a failed transaction.
      */
     public String checkoutOrder(Long orderId){
