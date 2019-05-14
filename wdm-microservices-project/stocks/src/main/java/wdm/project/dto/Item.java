@@ -23,7 +23,7 @@ public class Item implements Serializable {
 	private Integer stock;
 
 	@Column(name = "price")
-	private Double price;
+	private Integer price;
 
 	public Item() {
 	}
@@ -52,11 +52,11 @@ public class Item implements Serializable {
         this.stock = stock;
     }
 
-    public Double getPrice() {
+    public Integer getPrice() {
 		return price;
 	}
 
-	public void setPrice(Double price) {
+	public void setPrice(Integer price) {
 		this.price = price;
 	}
 
