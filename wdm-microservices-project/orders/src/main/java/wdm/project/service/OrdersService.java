@@ -17,6 +17,15 @@ public class OrdersService {
     @Autowired
     private OrdersItemsRepository ordersItemsRepository;
 
+    /**
+     * Initializes an order in the micro-service's database
+     * with zero total and a given user id that
+     * corresponds to the user this order is linked to.
+     * Returns the id of the order that is created.
+     *
+     * @param userId the id of the user this order is linked to
+     * @return the id of the order that is created
+     */
     public Long createOrder(Long userId) {
         try{
             Order order = new Order();
@@ -31,6 +40,12 @@ public class OrdersService {
         }
     }
 
+    /**
+     * Removes an order in the micro-service's database
+     * that corresponds to a give unique order id.
+     *
+     * @param orderId the id of the order to be deleted
+     */
     public void removeOrder(Long orderId){
         try{
             ordersRepository.deleteById(orderId);
@@ -40,6 +55,17 @@ public class OrdersService {
         }
     }
 
+    /**
+     * Finds the information of an order
+     * in the micro-service's database
+     * given an unique order id.
+     * Returns the user that this order is linked to,
+     * the ids of the items that this order has and
+     * the payment status.
+     *
+     * @param orderId the id of the order
+     * @return the order information (user id, items' id, payment status)
+     */
     public OrdersWrapper findOrder(Long orderId){
 
         OrdersWrapper ordersWrapper = new OrdersWrapper();
@@ -54,6 +80,13 @@ public class OrdersService {
         return ordersWrapper;
     }
 
+    /**
+     * Adds an item to a specified order.
+     *
+     * @param requestOrderItem contains the amount that of the items in the order
+     * @param itemId the id of the item
+     * @param orderId the id of the order the item is linked to
+     */
     public void addItem(OrderItem requestOrderItem, Long orderId, Long itemId){
         //TODO: Items price could be stored here when we call the stock service so we dont have to call again
         try{
@@ -67,6 +100,12 @@ public class OrdersService {
         }
     }
 
+    /**
+     * Removes a specified item from a specified order.
+     *
+     * @param orderId the id of the order that the item is removed from
+     * @param itemId the id of the item that is to be removed
+     */
     public void removeItem(Long orderId, Long itemId){
         try{
             ordersItemsRepository.deleteById(new OrderItemId(orderId, itemId));
@@ -76,6 +115,13 @@ public class OrdersService {
         }
     }
 
+    /**
+     * Checks-out an order invoking every other micro-service.
+     *
+     * @param orderId the id of order
+     * @return the status of the transaction SUCCESS for a successful transaction
+     * FAILURE for a failed transaction.
+     */
     public String checkoutOrder(Long orderId){
         // TODO: connect everything
         return "FAILURE";
