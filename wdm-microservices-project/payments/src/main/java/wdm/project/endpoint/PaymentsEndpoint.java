@@ -7,9 +7,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import wdm.project.dto.Payment;
+import wdm.project.enums.Status;
 import wdm.project.service.PaymentsService;
 
 @RestController
@@ -28,15 +28,19 @@ public class PaymentsEndpoint {
         return objectMapper.createObjectNode().put("status", payment.getStatus());
     }
 
-    @PostMapping("/pay/{order_id}")
-    public JsonNode payOrder(
+    @PostMapping("/pay/{order_id}/{user_id}/{total}")
+    public void payOrder(
             @PathVariable("order_id") Long orderId,
-            @RequestParam("userId") Long userId,
-            @RequestParam("total") Long total) {
+            @PathVariable("user_id") Long userId,
+            @PathVariable("total") Integer total) {
         if (userId == null || total == null) {
             throw new IllegalArgumentException("Params were not provided");
         }
         Payment payment = paymentsService.payOrder(orderId, userId, total);
-        return objectMapper.createObjectNode().put("status", payment.getStatus());
+        Status statusEnum = Status.findStatusEnum(payment.getStatus());
+        if (statusEnum != Status.SUCCESS) {
+            // TODO: Return 400
+            throw new RuntimeException();
+        }
     }
 }

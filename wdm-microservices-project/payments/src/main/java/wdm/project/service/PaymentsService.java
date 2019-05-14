@@ -30,8 +30,7 @@ public class PaymentsService {
             throw new RuntimeException("Id was not provided");
         }
         Payment payment;
-        Boolean exists = paymentsRepository.existsByOrderId(orderId);
-        if (exists) {
+        if (paymentsRepository.existsByOrderId(orderId)) {
             payment = paymentsRepository.findByOrderId(orderId);
         } else {
             payment = new Payment();
@@ -41,22 +40,23 @@ public class PaymentsService {
         return payment;
     }
 
-    public Payment payOrder(Long orderId, Long userId, Long totalPrice) {
+    public Payment payOrder(Long orderId, Long userId, Integer totalPrice) {
         Payment payment = new Payment();
         payment.setOrderId(orderId);
         payment.setUserId(userId);
 
         String paymentStatus = Status.FAILURE.getValue();
         try {
-            RestTemplate re = new RestTemplate();
             //TODO: Update communication
+            RestTemplate re = new RestTemplate();
             JsonNode response = re.postForObject("http://localhost:8083/users/credit/subtract/" + userId + "/" + totalPrice, null, JsonNode.class);
             String responseStatus = response.get("status").asText();
             if (responseStatus != null) {
                 paymentStatus = Status.findStatusEnum(responseStatus).getValue();
             }
         } catch (RestClientResponseException exception) {
-            // Handle by checking other instances in case of timeout.
+            // TODO: Handle by checking other instances in case of timeout.
+            throw new RuntimeException();
         }
         payment.setStatus(paymentStatus);
         return paymentsRepository.save(payment);

@@ -27,25 +27,25 @@ public class Payment {
     public Payment() {
     }
 
-	/**
-	 * Gets id.
-	 *
-	 * @return Value of id.
-	 */
-	public Long getId() {
-		return id;
-	}
+    /**
+     * Gets id.
+     *
+     * @return Value of id.
+     */
+    public Long getId() {
+        return id;
+    }
 
-	/**
-	 * Sets new id.
-	 *
-	 * @param id New value of id.
-	 */
-	public void setId(Long id) {
-		this.id = id;
-	}
+    /**
+     * Sets new id.
+     *
+     * @param id New value of id.
+     */
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	/**
+    /**
      * Gets userId.
      *
      * @return Value of userId.
