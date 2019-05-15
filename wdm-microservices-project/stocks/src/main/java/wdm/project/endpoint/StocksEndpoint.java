@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import wdm.project.dto.Item;
+import wdm.project.exception.StockException;
 import wdm.project.service.StocksService;
 
 @RestController
@@ -18,12 +19,12 @@ public class StocksEndpoint {
     private ObjectMapper objectMapper;
 
 	@GetMapping("/item/{id}")
-    public Item getItem(@PathVariable("id") Long itemId) {
+    public Item getItem(@PathVariable("id") Long itemId) throws StockException {
         return stocksService.getItem(itemId);
     }
 
     @GetMapping("/availability/{id}")
-    public JsonNode getItemAvailability(@PathVariable("id") Long itemId) {
+    public JsonNode getItemAvailability(@PathVariable("id") Long itemId) throws StockException{
         Integer availability = stocksService.getItemAvailability(itemId);
         return objectMapper.createObjectNode().put("stock", availability);
     }
@@ -35,12 +36,16 @@ public class StocksEndpoint {
     }
 
     @PostMapping("/add/{item_id}/{number}")
-    public void addItem(@PathVariable("item_id") Long itemId, @PathVariable("number") Integer itemNumber) {
+    public void addItem(@PathVariable("item_id") Long itemId,
+                        @PathVariable("number") Integer itemNumber
+    ) throws StockException {
         stocksService.addItem(itemId, itemNumber);
     }
 
     @PostMapping("/subtract/{item_id}/{number}")
-    public void subtractItem(@PathVariable("item_id") Long itemId, @PathVariable("number") Integer itemNumber) {
+    public void subtractItem(@PathVariable("item_id") Long itemId,
+                             @PathVariable("number") Integer itemNumber
+    ) throws StockException {
         stocksService.subtractItem(itemId, itemNumber);
     }
 }

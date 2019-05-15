@@ -1,8 +1,10 @@
 package wdm.project.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import wdm.project.dto.Item;
+import wdm.project.exception.StockException;
 import wdm.project.repository.StocksRepository;
 
 @Service
@@ -16,14 +18,15 @@ public class StocksService {
      *
      * @param itemId the id of the instance to be fetched
      * @return the Item with the provided id
+     * @throws StockException when the item with the provided ID is not found
      */
-    public Item getItem(Long itemId) {
+    public Item getItem(Long itemId) throws StockException {
         if (itemId == null) {
-            throw new RuntimeException("Id was not provided");
+            throw new StockException("Provided item ID was null. Please provide a valid ID.", HttpStatus.BAD_REQUEST);
         }
         boolean existsStocks = stocksRepository.existsById(itemId);
         if (!existsStocks) {
-            throw new RuntimeException("There was no stock with the provided id");
+            throw new StockException("The item with ID " + itemId + " was not found.", HttpStatus.NOT_FOUND);
         }
         return stocksRepository.findById(itemId).orElseThrow(RuntimeException::new);
     }
@@ -34,8 +37,9 @@ public class StocksService {
      *
      * @param itemId the id of the item
      * @return the stock of the item
+     * @throws StockException when the item with the provided ID is not found
      */
-    public Integer getItemAvailability(Long itemId) {
+    public Integer getItemAvailability(Long itemId) throws StockException {
         Item item = getItem(itemId);
         return item.getStock();
     }
@@ -62,8 +66,9 @@ public class StocksService {
      * @param itemId the id of the Item, the stock of which is
      * is goings to be updated
      * @param additionalStock the stock to be added
+     * @throws StockException when the item with the provided ID is not found.
      */
-    public void addItem(Long itemId, Integer additionalStock) {
+    public void addItem(Long itemId, Integer additionalStock) throws StockException {
         Item item = getItem(itemId);
         Integer currentStock = item.getStock();
         item.setStock(currentStock + additionalStock);
@@ -74,14 +79,17 @@ public class StocksService {
      * Subtracts stock from the Item instance with the provided id.
      *
      * @param itemId the id of the Item, the stock of which is
-     *      * is goings to be updated
+     * is going to be updated
      * @param subtractedStock the stock to be subtracted
+     * @throws StockException when the item with the provided ID is not
+     * found or the stock is insufficient.
      */
-    public void subtractItem(Long itemId, Integer subtractedStock) {
+    public void subtractItem(Long itemId, Integer subtractedStock) throws StockException {
         Item item = getItem(itemId);
         Integer currentStock = item.getStock();
         if (subtractedStock > currentStock) {
-            throw new RuntimeException("Stock cannot be negative");
+            throw new StockException("The stock of item ID " + itemId + " is " + currentStock +
+                                     " and can therefore not be reduced by " + subtractedStock + ".", HttpStatus.BAD_REQUEST);
         }
         item.setStock(currentStock - subtractedStock);
         stocksRepository.save(item);
