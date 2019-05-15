@@ -1,5 +1,4 @@
 -- Creating database
-
 CREATE DATABASE "Orders"
     WITH
     OWNER = postgres

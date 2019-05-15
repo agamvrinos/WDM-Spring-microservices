@@ -4,14 +4,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
 import java.util.List;
 
-public class OrdersWrapper{
+public class OrdersWrapper {
 
     @JsonProperty("status")
     private String paymentStatus;
-    @JsonProperty("user_id")
+    @JsonProperty("userId")
     private Long userId;
     @JsonProperty("items")
-    private List<Long> orderItems;
+    private List<ItemInfo> orderItems;
 
     public OrdersWrapper(){
         this.orderItems = new ArrayList<>();
@@ -33,11 +33,20 @@ public class OrdersWrapper{
         this.userId = userId;
     }
 
-    public List<Long> getOrderItems() {
+    public List<ItemInfo> getOrderItems() {
         return orderItems;
     }
 
-    public void setOrderItems(List<Long> orderItems) {
+    public void setOrderItems(List<ItemInfo> orderItems) {
         this.orderItems = orderItems;
     }
+
+	@Override
+	public String toString() {
+		return "OrdersWrapper{" +
+				"paymentStatus='" + paymentStatus + '\'' +
+				", userId=" + userId +
+				", orderItems=" + orderItems +
+				'}';
+	}
 }
