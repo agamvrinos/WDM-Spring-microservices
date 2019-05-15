@@ -44,13 +44,15 @@ public class PaymentsService {
     }
 
     /**
-     * Pays for the order with the provided ID by reducing the total price from
-     * the credit of the user with the provided ID.
+     * Pays for the order with the provided ID by reducing the total price
+     * from the credit of the user with the provided ID.
+     *
      * @param orderId the ID of the order
      * @param userId the ID of the user
      * @param totalPrice the price of the order to be paid by the user
      * @return the Payment with the provided order ID
-     * @throws PaymentException when the communication with the Users microservice has failed.
+     * @throws PaymentException when the communication with the Users
+     * microservice has failed
      */
     public Payment payOrder(Long orderId, Long userId, Integer totalPrice) throws PaymentException {
         Payment payment = new Payment();
