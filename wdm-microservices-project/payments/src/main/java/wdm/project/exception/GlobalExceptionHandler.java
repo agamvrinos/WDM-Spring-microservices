@@ -9,10 +9,19 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.xml.ws.Response;
+
 @ControllerAdvice
-public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionHandler {
+public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler({MethodArgumentTypeMismatchException.class, IllegalArgumentException.class})
     protected ResponseEntity<Object> handleWrongInput(final RuntimeException excep, final WebRequest request) {
         return handleExceptionInternal(excep, "Wrong input is supplied.", new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
+    }
+
+    @ExceptionHandler(PaymentException.class)
+    public ResponseEntity<ExceptionResponse> handleControllerError(HttpServletRequest req, PaymentException ex) {
+        ExceptionResponse response = new ExceptionResponse(ex.getErrorMessage(), ex.getHttpStatus());
+        return ResponseEntity.status(response.getStatus()).body(response);
     }
 }

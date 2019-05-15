@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import wdm.project.dto.Payment;
 import wdm.project.enums.Status;
+import wdm.project.exception.PaymentException;
 import wdm.project.service.PaymentsService;
 
 @RestController
@@ -23,7 +24,7 @@ public class PaymentsEndpoint {
     private ObjectMapper objectMapper;
 
     @GetMapping("/status/{order_id}")
-    public JsonNode getPaymentStatus(@PathVariable("order_id") Long orderId) {
+    public JsonNode getPaymentStatus(@PathVariable("order_id") Long orderId) throws PaymentException {
         Payment payment = paymentsService.getPaymentByOrderId(orderId);
         return objectMapper.createObjectNode().put("status", payment.getStatus());
     }
@@ -32,7 +33,7 @@ public class PaymentsEndpoint {
     public void payOrder(
             @PathVariable("order_id") Long orderId,
             @PathVariable("user_id") Long userId,
-            @PathVariable("total") Integer total) {
+            @PathVariable("total") Integer total) throws PaymentException {
         if (userId == null || total == null) {
             throw new IllegalArgumentException("Params were not provided");
         }

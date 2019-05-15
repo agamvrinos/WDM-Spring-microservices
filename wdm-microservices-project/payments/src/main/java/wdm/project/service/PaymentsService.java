@@ -2,11 +2,13 @@ package wdm.project.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 import wdm.project.dto.Payment;
 import wdm.project.enums.Status;
+import wdm.project.exception.PaymentException;
 import wdm.project.repository.PaymentsRepository;
 
 @Service
@@ -24,10 +26,11 @@ public class PaymentsService {
      * @param orderId the id of the order
      * @return the Payment with the provided order id or a mock
      * "Pending" payment
+     * @throws PaymentException when the provided order ID is null
      */
-    public Payment getPaymentByOrderId(Long orderId) {
+    public Payment getPaymentByOrderId(Long orderId) throws PaymentException {
         if (orderId == null) {
-            throw new RuntimeException("Id was not provided");
+            throw new PaymentException("Order ID cannot be null", HttpStatus.BAD_REQUEST);
         }
         Payment payment;
         if (paymentsRepository.existsByOrderId(orderId)) {
@@ -40,7 +43,16 @@ public class PaymentsService {
         return payment;
     }
 
-    public Payment payOrder(Long orderId, Long userId, Integer totalPrice) {
+    /**
+     * Pays for the order with the provided ID by reducing the total price from
+     * the credit of the user with the provided ID.
+     * @param orderId the ID of the order
+     * @param userId the ID of the user
+     * @param totalPrice the price of the order to be paid by the user
+     * @return the Payment with the provided order ID
+     * @throws PaymentException when the communication with the Users microservice has failed.
+     */
+    public Payment payOrder(Long orderId, Long userId, Integer totalPrice) throws PaymentException {
         Payment payment = new Payment();
         payment.setOrderId(orderId);
         payment.setUserId(userId);
@@ -56,7 +68,7 @@ public class PaymentsService {
             }
         } catch (RestClientResponseException exception) {
             // TODO: Handle by checking other instances in case of timeout.
-            throw new RuntimeException();
+            throw new PaymentException("There was an exception while communicating with the Users microservice.", HttpStatus.INTERNAL_SERVER_ERROR);
         }
         payment.setStatus(paymentStatus);
         return paymentsRepository.save(payment);
