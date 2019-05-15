@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import wdm.project.dto.OrderItem;
 import wdm.project.dto.OrdersWrapper;
+import wdm.project.exception.OrderException;
 import wdm.project.service.OrdersService;
 
 @RestController
@@ -24,12 +25,12 @@ public class OrdersEndpoint {
     }
 
     @DeleteMapping("/remove/{order_id}")
-    public void removeOrder(@PathVariable("order_id") Long orderId) throws RuntimeException {
+    public void removeOrder(@PathVariable("order_id") Long orderId) throws OrderException {
         ordersService.removeOrder(orderId);
     }
 
     @GetMapping("/find/{order_id}")
-    public OrdersWrapper findOrder(@PathVariable("order_id") Long orderId) throws RuntimeException {
+    public OrdersWrapper findOrder(@PathVariable("order_id") Long orderId) throws OrderException {
         return ordersService.findOrder(orderId);
     }
 
@@ -38,7 +39,7 @@ public class OrdersEndpoint {
             @RequestBody OrderItem requestOrderItem,
             @PathVariable("order_id") Long orderId,
             @PathVariable("item_id") Long itemId
-    ) throws RuntimeException {
+    ) {
         // TODO call stock service for item information and not @RequestBody
         ordersService.addItem(requestOrderItem, orderId, itemId);
     }
@@ -47,7 +48,7 @@ public class OrdersEndpoint {
     public void removeItem(
             @PathVariable("order_id") Long orderId,
             @PathVariable("item_id") Long itemId
-    ) throws RuntimeException {
+    ) throws OrderException {
         ordersService.removeItem(orderId, itemId);
     }
 

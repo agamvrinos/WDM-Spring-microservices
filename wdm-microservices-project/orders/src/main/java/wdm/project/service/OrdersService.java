@@ -1,11 +1,13 @@
 package wdm.project.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import wdm.project.dto.Order;
 import wdm.project.dto.OrderItem;
 import wdm.project.dto.OrderItemId;
 import wdm.project.dto.OrdersWrapper;
+import wdm.project.exception.OrderException;
 import wdm.project.repository.OrdersItemsRepository;
 import wdm.project.repository.OrdersRepository;
 
@@ -27,6 +29,7 @@ public class OrdersService {
      */
     public Long createOrder(Long userId) {
         try{
+            // TODO: Currently receives a duplicate PK, has to be fixed.
             Order order = new Order();
             order.setUserId(userId);
             order.setTotal(0);
@@ -44,13 +47,14 @@ public class OrdersService {
      * to a give unique order id.
      *
      * @param orderId the id of the order to be deleted
+     * @throws OrderException when the order with the provided ID is not found
      */
-    public void removeOrder(Long orderId){
-        try{
+    public void removeOrder(Long orderId) throws OrderException {
+        if (ordersRepository.existsById(orderId)) {
+            // TODO: Remove all order items before deleting this, otherwise FK constraints are (possibly) violated.
             ordersRepository.deleteById(orderId);
-        } catch (RuntimeException exc){
-            // TODO: Check if resource does not exist
-            throw new RuntimeException("Unable to delete order: "+orderId+"(order_id)");
+        } else {
+            throw new OrderException("There is no order with ID " + orderId + ".", HttpStatus.NOT_FOUND);
         }
     }
 
@@ -61,13 +65,14 @@ public class OrdersService {
      *
      * @param orderId the id of the order
      * @return the order information (user id, items' id, payment status)
+     * @throws OrderException when the order with the provided ID is not found
      */
-    public OrdersWrapper findOrder(Long orderId){
+    public OrdersWrapper findOrder(Long orderId) throws OrderException {
 
         OrdersWrapper ordersWrapper = new OrdersWrapper();
 
         Order order  = ordersRepository.findById(orderId).orElseThrow(
-                () -> new OrderNotFoundException(orderId));
+                () -> new OrderException("Order with ID " + orderId + " not found.", HttpStatus.NOT_FOUND));
 
         ordersWrapper.setOrderItems(ordersItemsRepository.findAllOrderItems(orderId));
         ordersWrapper.setPaymentStatus("SUCCESSFUL"); // TODO call the payment microservice for that
@@ -84,16 +89,19 @@ public class OrdersService {
      * @param itemId the id of the item
      * @param orderId the id of the order the item is linked to
      */
-    public void addItem(OrderItem requestOrderItem, Long orderId, Long itemId){
+    public void addItem(OrderItem requestOrderItem, Long orderId, Long itemId) {
         //TODO: Items price could be stored here when we call the stock service so we dont have to call again
-        try{
+        OrderItemId orderItemId = new OrderItemId(orderId, itemId);
+        if (ordersItemsRepository.existsById(orderItemId)) {
+            OrderItem orderItem = ordersItemsRepository.getOne(orderItemId);
+            int amount = orderItem.getAmount() + requestOrderItem.getAmount();
+            orderItem.setAmount(amount);
+            ordersItemsRepository.save(orderItem);
+        } else {
             OrderItem orderItem = new  OrderItem();
             orderItem.setId(orderId, itemId);
             orderItem.setAmount(requestOrderItem.getAmount());
             ordersItemsRepository.save(orderItem);
-        } catch (RuntimeException exc){
-            // TODO: Check if resource already exists
-            throw new RuntimeException("Unable to add item: "+itemId+"(item_id) to order: "+orderId+"(order_id)");
         }
     }
 
@@ -102,13 +110,14 @@ public class OrdersService {
      *
      * @param orderId the id of the order that the item is removed from
      * @param itemId the id of the item that is to be removed
+     * @throws OrderException when the OrderItem with provided IDs cannot be found.
      */
-    public void removeItem(Long orderId, Long itemId){
-        try{
-            ordersItemsRepository.deleteById(new OrderItemId(orderId, itemId));
-        } catch (RuntimeException exc){
-            // TODO: Check if resource does not exist
-            throw new RuntimeException("Unable to remove item: "+itemId+"(item_id) from order: "+orderId+"(order_id)");
+    public void removeItem(Long orderId, Long itemId) throws OrderException {
+        OrderItemId orderItemId = new OrderItemId(orderId, itemId);
+        if (ordersItemsRepository.existsById(orderItemId)) {
+            ordersItemsRepository.deleteById(orderItemId);
+        } else {
+            throw new OrderException("Unable to remove item with ID " + itemId + " from order with ID " + orderId + ".", HttpStatus.NOT_FOUND);
         }
     }
 
@@ -123,9 +132,5 @@ public class OrdersService {
     public String checkoutOrder(Long orderId){
         // TODO: connect everything
         return "FAILURE";
-    }
-
-    public class OrderNotFoundException extends RuntimeException {
-        OrderNotFoundException(Long id) {super("Order with id: " + id+ " does not exist");}
     }
 }
