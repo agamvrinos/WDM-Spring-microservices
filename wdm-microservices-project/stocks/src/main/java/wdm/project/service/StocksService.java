@@ -22,7 +22,7 @@ public class StocksService {
      */
     public Item getItem(Long itemId) throws StockException {
         if (itemId == null) {
-            throw new StockException("Provided item ID was null. Please provide a valid ID.", HttpStatus.NOT_FOUND);
+            throw new StockException("Provided item ID was null. Please provide a valid ID.", HttpStatus.BAD_REQUEST);
         }
         boolean existsStocks = stocksRepository.existsById(itemId);
         if (!existsStocks) {
@@ -63,8 +63,8 @@ public class StocksService {
     /**
      * Adds stock to the Item instance with the provided id.
      *
-     * @param itemId          the id of the Item, the stock of which is
-     *                        is goings to be updated
+     * @param itemId the id of the Item, the stock of which is
+     * is goings to be updated
      * @param additionalStock the stock to be added
      * @throws StockException when the item with the provided ID is not found.
      */
@@ -78,10 +78,11 @@ public class StocksService {
     /**
      * Subtracts stock from the Item instance with the provided id.
      *
-     * @param itemId          the id of the Item, the stock of which is
-     *                        is going to be updated
+     * @param itemId the id of the Item, the stock of which is
+     * is going to be updated
      * @param subtractedStock the stock to be subtracted
-     * @throws StockException when the item with the provided ID is not found or the stock is insufficient.
+     * @throws StockException when the item with the provided ID is not
+     * found or the stock is insufficient.
      */
     public void subtractItem(Long itemId, Integer subtractedStock) throws StockException {
         Item item = getItem(itemId);

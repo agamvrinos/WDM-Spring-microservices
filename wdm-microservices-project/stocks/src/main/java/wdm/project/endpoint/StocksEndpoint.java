@@ -37,13 +37,15 @@ public class StocksEndpoint {
 
     @PostMapping("/add/{item_id}/{number}")
     public void addItem(@PathVariable("item_id") Long itemId,
-                        @PathVariable("number") Integer itemNumber) throws StockException {
+                        @PathVariable("number") Integer itemNumber
+    ) throws StockException {
         stocksService.addItem(itemId, itemNumber);
     }
 
     @PostMapping("/subtract/{item_id}/{number}")
     public void subtractItem(@PathVariable("item_id") Long itemId,
-                             @PathVariable("number") Integer itemNumber) throws StockException {
+                             @PathVariable("number") Integer itemNumber
+    ) throws StockException {
         stocksService.subtractItem(itemId, itemNumber);
     }
 }
