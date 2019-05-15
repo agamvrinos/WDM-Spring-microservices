@@ -29,7 +29,6 @@ public class OrdersService {
      */
     public Long createOrder(Long userId) {
         try{
-            // TODO: Currently receives a duplicate PK, has to be fixed.
             Order order = new Order();
             order.setUserId(userId);
             order.setTotal(0);

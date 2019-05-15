@@ -7,13 +7,14 @@ CREATE DATABASE "Orders"
     TABLESPACE = pg_default
     CONNECTION LIMIT = -1;
 
+\c "Orders"
 /* public.order table*/
 CREATE TABLE public.order
 (
     id      bigserial NOT NULL PRIMARY KEY,
     user_id bigint    NOT NULL,
     total   real      NOT NULL
-)
+) TABLESPACE pg_default;
 /* public.order_items table*/
 CREATE TABLE public.order_items
 (
@@ -25,5 +26,4 @@ CREATE TABLE public.order_items
 )
 TABLESPACE pg_default;
 ALTER TABLE public.order_items OWNER to postgres;
-TABLESPACE pg_default;
 ALTER TABLE public.order OWNER to postgres;
