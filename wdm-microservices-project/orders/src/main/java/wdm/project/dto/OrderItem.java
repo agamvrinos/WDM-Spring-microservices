@@ -11,7 +11,7 @@ public class OrderItem implements Serializable {
     @EmbeddedId
     private OrderItemId id;
 
-    @Column(name = "number")
+    @Column(name = "amount")
     private Integer amount;
 
     public OrderItem(){

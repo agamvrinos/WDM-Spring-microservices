@@ -50,7 +50,7 @@ public class OrdersService {
      */
     public void removeOrder(Long orderId) throws OrderException {
         if (ordersRepository.existsById(orderId)) {
-            // TODO: Remove all order items before deleting this, otherwise FK constraints are (possibly) violated.
+            ordersItemsRepository.deleteById_OrderId(orderId);
             ordersRepository.deleteById(orderId);
         } else {
             throw new OrderException("There is no order with ID " + orderId + ".", HttpStatus.NOT_FOUND);
@@ -73,7 +73,7 @@ public class OrdersService {
         Order order  = ordersRepository.findById(orderId).orElseThrow(
                 () -> new OrderException("Order with ID " + orderId + " not found.", HttpStatus.NOT_FOUND));
 
-        ordersWrapper.setOrderItems(ordersItemsRepository.findAllOrderItems(orderId));
+        ordersWrapper.setOrderItems(ordersItemsRepository.findAllById_OrderId(orderId));
         ordersWrapper.setPaymentStatus("SUCCESSFUL"); // TODO call the payment microservice for that
         ordersWrapper.setUserId(order.getUserId());
 

@@ -11,33 +11,45 @@ public class OrdersWrapper{
     @JsonProperty("user_id")
     private Long userId;
     @JsonProperty("items")
-    private List<Long> orderItems;
+    private List<IdAmountWrapper>  orderItems;
+
+    class IdAmountWrapper{
+        @JsonProperty("item_id")
+        Long id;
+        @JsonProperty("amount")
+        Integer amount;
+        IdAmountWrapper(Long itemId, Integer amount){
+            this.id = itemId;
+            this. amount = amount;
+        }
+    }
 
     public OrdersWrapper(){
         this.orderItems = new ArrayList<>();
-    }
-
-    public String getPaymentStatus() {
-        return paymentStatus;
     }
 
     public void setPaymentStatus(String paymentStatus) {
         this.paymentStatus = paymentStatus;
     }
 
-    public Long getUserId() {
-        return userId;
-    }
-
     public void setUserId(Long userId) {
         this.userId = userId;
     }
 
-    public List<Long> getOrderItems() {
-        return orderItems;
+    public void setOrderItems(List<OrderItem>  orderItems) {
+
+        List<IdAmountWrapper>  wrapped = new ArrayList<>();
+
+        for (OrderItem oi : orderItems){
+            wrapped.add(new IdAmountWrapper(oi.getId().getItemId(), oi.getAmount()));
+        }
+
+        this.orderItems = wrapped ;
     }
 
-    public void setOrderItems(List<Long> orderItems) {
-        this.orderItems = orderItems;
-    }
+    public String getPaymentStatus() { return paymentStatus; }
+
+    public Long getUserId() { return userId; }
+
+    public List<IdAmountWrapper> getOrderItems() { return orderItems; }
 }
