@@ -21,6 +21,7 @@
     </properties>
 
     <modules>
+        <module>config-service</module>
         <module>orders</module>
         <module>payments</module>
         <module>stocks</module>
