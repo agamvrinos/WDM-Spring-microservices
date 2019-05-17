@@ -6,6 +6,7 @@ wdm-microservices-project/users/users.iml
 wdm-microservices-project/orders/orders.iml
 wdm-microservices-project/payments/payments.iml
 wdm-microservices-project/stocks/stocks.iml
+wdm-microservices-project/WDM.iml
 
 # /target folders
 wdm-microservices-project/users/target
