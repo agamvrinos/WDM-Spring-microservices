@@ -29,20 +29,19 @@ public class OrdersService {
      * is linked to. Returns the id of the order that is created.
      *
      * @param userId the id of the user this order is linked to
-     * @return the id of the order that is created
+     * @return the order that is created
+     * @throws OrderException in case the id of the user was not provided
      */
-    public Long createOrder(Long userId) {
-        try{
-            Order order = new Order();
-            order.setUserId(userId);
-            order.setTotal(0);
-            ordersRepository.save(order);
+    public Order createOrder(Long userId) throws OrderException {
+    	if (userId == null) {
+    		throw new OrderException("User id was not provided", HttpStatus.BAD_REQUEST);
+	    }
+        Order order = new Order();
+        order.setUserId(userId);
+        order.setTotal(0);
+        ordersRepository.save(order);
 
-            return  order.getId();
-        } catch (RuntimeException exc) {
-            // TODO: Check if resource already exists
-            throw new RuntimeException("Unable to create new order for user: " + userId + "(user_id)");
-        }
+        return  order;
     }
 
     /**

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import wdm.project.dto.Order;
 import wdm.project.dto.OrderItem;
 import wdm.project.dto.OrdersWrapper;
 import wdm.project.exception.OrderException;
@@ -20,8 +21,9 @@ public class OrdersEndpoint {
     private ObjectMapper objectMapper;
 
     @PostMapping("/create/{user_id}")
-    public JsonNode createOrder(@PathVariable("user_id") Long userId) throws  RuntimeException{
-        return objectMapper.createObjectNode().put("order_id", ordersService.createOrder(userId));
+    public JsonNode createOrder(@PathVariable("user_id") Long userId) throws OrderException {
+        Order order = ordersService.createOrder(userId);
+        return objectMapper.createObjectNode().put("orderId", order.getId());
     }
 
     @DeleteMapping("/remove/{order_id}")
@@ -55,6 +57,7 @@ public class OrdersEndpoint {
     @PostMapping("/orders/checkout/{order_id}")
     public JsonNode checkoutOrder(@PathVariable("order_id") Long orderId) {
         // TODO call everything
-        return objectMapper.createObjectNode().put("status", ordersService.checkoutOrder(orderId));
+        String status = ordersService.checkoutOrder(orderId);
+        return objectMapper.createObjectNode().put("status", status);
     }
 }
