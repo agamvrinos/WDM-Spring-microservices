@@ -1,0 +1,60 @@
+server:
+  port: 8888
+spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: git@github.com:agamvrinos/WDM-Spring-microservices.git
+          default-label: configuration-files
+          ignore-local-ssh-settings: true
+          private-key: |
+            -----BEGIN OPENSSH PRIVATE KEY-----
+            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
+            P6rffq+Uz9TuyQAAAAZjb25maWcBAgM=
+            -----END OPENSSH PRIVATE KEY-----
