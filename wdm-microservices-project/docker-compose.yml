@@ -1,0 +1,27 @@
+version: "3.7"
+services:
+
+  config-service:
+    image: wdm/config
+    ports:
+      - "8888:8888"
+
+  order-service:
+    image: wdm/orders
+    ports:
+      - "8080:8080"
+
+  payment-service:
+    image: wdm/payments
+    ports:
+      - "8081:8081"
+
+  stock-service:
+    image: wdm/stocks
+    ports:
+      - "8082:8082"
+
+  user-service:
+    image: wdm/users
+    ports:
+      - "8083:8083"
