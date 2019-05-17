@@ -6,8 +6,12 @@ spring:
       server:
         git:
           uri: git@github.com:agamvrinos/WDM-Spring-microservices.git
-          default-label: configuration-files
+          # the branch where the config files are located (master if not set) [did not work]
+          #default-label: configuration-files
+          # the relative path in github repo where the config files are located
+          search-paths: services-config
           ignore-local-ssh-settings: true
+          # had the server running with this key before, now it says invalid private key
           private-key: |
             -----BEGIN OPENSSH PRIVATE KEY-----
             b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAACFwAAAAdzc2gtcn
