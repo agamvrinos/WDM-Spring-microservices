@@ -1,8 +1,12 @@
 package wdm.project.service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import wdm.project.dto.ItemInfo;
 import wdm.project.dto.Order;
 import wdm.project.dto.OrderItem;
 import wdm.project.dto.OrderItemId;
@@ -73,7 +77,14 @@ public class OrdersService {
         Order order  = ordersRepository.findById(orderId).orElseThrow(
                 () -> new OrderException("Order with ID " + orderId + " not found.", HttpStatus.NOT_FOUND));
 
-        ordersWrapper.setOrderItems(ordersItemsRepository.findAllById_OrderId(orderId));
+        List<OrderItem> orderItems = ordersItemsRepository.findAllById_OrderId(orderId);
+        List<ItemInfo> itemsInfo = new ArrayList<>();
+	    for (OrderItem item : orderItems) {
+		    ItemInfo itemInfo = new ItemInfo(item.getId().getItemId(), item.getAmount());
+		    itemsInfo.add(itemInfo);
+	    }
+
+        ordersWrapper.setOrderItems(itemsInfo);
         ordersWrapper.setPaymentStatus("SUCCESSFUL"); // TODO call the payment microservice for that
         ordersWrapper.setUserId(order.getUserId());
 
