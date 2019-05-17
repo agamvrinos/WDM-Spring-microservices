@@ -14,6 +14,7 @@ public interface OrdersItemsRepository extends JpaRepository<OrderItem, OrderIte
     List<OrderItem> findAllById_OrderId(Long orderId);
 
     @Transactional
+    //FIXME: This is madness!!
     void deleteById_OrderId(Long orderId);
 
 }

@@ -2,6 +2,7 @@ package wdm.project.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -11,6 +12,7 @@ import wdm.project.dto.Order;
 import wdm.project.dto.OrderItem;
 import wdm.project.dto.OrderItemId;
 import wdm.project.dto.OrdersWrapper;
+import wdm.project.endpoint.OrdersEndpoint;
 import wdm.project.exception.OrderException;
 import wdm.project.repository.OrdersItemsRepository;
 import wdm.project.repository.OrdersRepository;
@@ -53,6 +55,7 @@ public class OrdersService {
      */
     public void removeOrder(Long orderId) throws OrderException {
         if (ordersRepository.existsById(orderId)) {
+        	//FIXME: This needs to be changed!!
             ordersItemsRepository.deleteById_OrderId(orderId);
             ordersRepository.deleteById(orderId);
         } else {
@@ -67,14 +70,18 @@ public class OrdersService {
      *
      * @param orderId the id of the order
      * @return the order information (user id, items' id, payment status)
-     * @throws OrderException when the order with the provided ID is not found
+     * @throws OrderException when the order id was not provided or the
+     * order with the provided ID is not found
      */
     public OrdersWrapper findOrder(Long orderId) throws OrderException {
-
+		if (orderId == null) {
+			throw new OrderException("The order id was not provided");
+		}
         OrdersWrapper ordersWrapper = new OrdersWrapper();
 
-        Order order  = ordersRepository.findById(orderId).orElseThrow(
-                () -> new OrderException("Order with ID " + orderId + " not found.", HttpStatus.NOT_FOUND));
+        Optional<Order> orderOptional  = ordersRepository.findById(orderId);
+        Order order = orderOptional.orElseThrow(
+				        () -> new OrderException("Order with ID " + orderId + " not found.", HttpStatus.NOT_FOUND));
 
         List<OrderItem> orderItems = ordersItemsRepository.findAllById_OrderId(orderId);
         List<ItemInfo> itemsInfo = new ArrayList<>();
@@ -98,11 +105,24 @@ public class OrdersService {
      * @param itemId the id of the item
      * @param orderId the id of the order the item is linked to
      */
-    public void addItem(OrderItem requestOrderItem, Long orderId, Long itemId) {
+    public void addItem(OrderItem requestOrderItem, Long orderId, Long itemId) throws OrderException {
+    	if (orderId == null) {
+    		throw new OrderException("Order id was not provided");
+	    }
+	    if (itemId == null) {
+		    throw new OrderException("Item id was not provided");
+	    }
+	    boolean existsOrder = ordersRepository.existsById(orderId);
+	    if (!existsOrder) {
+	    	throw new OrderException("There is no order with it \"" + orderId + "\"");
+	    }
+
         //TODO: Items price could be stored here when we call the stock service so we dont have to call again
         OrderItemId orderItemId = new OrderItemId(orderId, itemId);
         if (ordersItemsRepository.existsById(orderItemId)) {
-            OrderItem orderItem = ordersItemsRepository.getOne(orderItemId);
+            Optional<OrderItem> orderItemOptional = ordersItemsRepository.findById(orderItemId);
+            OrderItem orderItem = orderItemOptional.orElseThrow(
+		            () -> new OrderException("There was no order item with such id", HttpStatus.NOT_FOUND));
             int amount = orderItem.getAmount() + requestOrderItem.getAmount();
             orderItem.setAmount(amount);
             ordersItemsRepository.save(orderItem);
