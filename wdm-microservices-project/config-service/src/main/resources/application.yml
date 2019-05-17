@@ -6,7 +6,7 @@ spring:
       server:
         git:
           uri: git@github.com:agamvrinos/WDM-Spring-microservices.git
-          searchPaths: configuration-files
+          default-label: configuration-files
           ignore-local-ssh-settings: true
           private-key: |
             -----BEGIN OPENSSH PRIVATE KEY-----
