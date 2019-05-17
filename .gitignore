@@ -6,12 +6,14 @@ wdm-microservices-project/users/users.iml
 wdm-microservices-project/orders/orders.iml
 wdm-microservices-project/payments/payments.iml
 wdm-microservices-project/stocks/stocks.iml
+wdm-microservices-project/config-service/config-service.iml
 
 # /target folders
 wdm-microservices-project/users/target
 wdm-microservices-project/orders/target
 wdm-microservices-project/payments/target
 wdm-microservices-project/stocks/target
+wdm-microservices-project/config-service/target
 
 # Compiled class file
 *.class
