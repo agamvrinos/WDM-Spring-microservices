@@ -20,9 +20,9 @@ public class ExampleTest {
     @Autowired
     private MockMvc mvc;
 
-    @Test
-    public void getHello() throws Exception {
-        mvc.perform(MockMvcRequestBuilders.get("/users/find/0").accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-    }
+//    @Test
+//    public void getHello() throws Exception {
+//        mvc.perform(MockMvcRequestBuilders.get("/users/find/0").accept(MediaType.APPLICATION_JSON))
+//                .andExpect(status().isOk());
+//    }
 }

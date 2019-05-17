@@ -9,7 +9,7 @@
 		<version>2.1.4.RELEASE</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>wdm.project.payments</groupId>
+	<groupId>wdm.project</groupId>
 	<artifactId>payments</artifactId>
 	<version>1.0-SNAPSHOT</version>
 
