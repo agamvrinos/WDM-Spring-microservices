@@ -1,20 +1,36 @@
 # IntelliJ
 .idea
+wdm-microservices-project-couchDB/.idea
 
 # *iml
+# Postgres
 wdm-microservices-project/users/users.iml
 wdm-microservices-project/orders/orders.iml
 wdm-microservices-project/payments/payments.iml
 wdm-microservices-project/stocks/stocks.iml
 wdm-microservices-project/eureka/eureka.iml
 wdm-microservices-project/WDM.iml
+# CouchDB
+wdm-microservices-project-couchDB/users/users.iml
+wdm-microservices-project-couchDB/orders/orders.iml
+wdm-microservices-project-couchDB/payments/payments.iml
+wdm-microservices-project-couchDB/stocks/stocks.iml
+wdm-microservices-project-couchDB/eureka/eureka.iml
+wdm-microservices-project-couchDB/WDM.iml
 
 # /target folders
+# Postgres
 wdm-microservices-project/users/target
 wdm-microservices-project/orders/target
 wdm-microservices-project/payments/target
 wdm-microservices-project/stocks/target
 wdm-microservices-project/eureka/target
+# CouchDB
+wdm-microservices-project-couchDB/users/target
+wdm-microservices-project-couchDB/orders/target
+wdm-microservices-project-couchDB/payments/target
+wdm-microservices-project-couchDB/stocks/target
+wdm-microservices-project-couchDB/eureka/target
 
 # Compiled class file
 *.class
