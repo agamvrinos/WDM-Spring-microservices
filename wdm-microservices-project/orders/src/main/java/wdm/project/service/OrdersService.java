@@ -12,14 +12,22 @@ import wdm.project.dto.Order;
 import wdm.project.dto.OrderItem;
 import wdm.project.dto.OrderItemId;
 import wdm.project.dto.OrdersWrapper;
-import wdm.project.endpoint.OrdersEndpoint;
 import wdm.project.exception.OrderException;
 import wdm.project.repository.OrdersItemsRepository;
 import wdm.project.repository.OrdersRepository;
+import wdm.project.service.clients.PaymentsServiceClient;
+import wdm.project.service.clients.StocksServiceClient;
+import wdm.project.service.clients.UsersServiceClient;
 
 @Service
 public class OrdersService {
 
+	@Autowired
+	private StocksServiceClient stocksServiceClient;
+	@Autowired
+	private UsersServiceClient usersServiceClient;
+	@Autowired
+	private PaymentsServiceClient paymentsServiceClient;
     @Autowired
     private OrdersRepository ordersRepository;
     @Autowired

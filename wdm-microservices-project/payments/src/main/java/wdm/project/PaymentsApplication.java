@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 
 @EnableFeignClients
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages={"wdm.project.service.clients"})
 public class PaymentsApplication {
 
     public static void main(String[] args) {

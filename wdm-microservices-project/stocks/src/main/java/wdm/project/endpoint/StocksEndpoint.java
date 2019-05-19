@@ -1,9 +1,12 @@
 package wdm.project.endpoint;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import wdm.project.dto.Item;
 import wdm.project.exception.StockException;
 import wdm.project.service.StocksService;
@@ -15,24 +18,20 @@ public class StocksEndpoint {
     @Autowired
     private StocksService stocksService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
 	@GetMapping("/item/{id}")
     public Item getItem(@PathVariable("id") Long itemId) throws StockException {
         return stocksService.getItem(itemId);
     }
 
     @GetMapping("/availability/{id}")
-    public JsonNode getItemAvailability(@PathVariable("id") Long itemId) throws StockException{
-        Integer availability = stocksService.getItemAvailability(itemId);
-        return objectMapper.createObjectNode().put("stock", availability);
+    public Integer getItemAvailability(@PathVariable("id") Long itemId) throws StockException{
+        return stocksService.getItemAvailability(itemId);
     }
 
     @PostMapping("/item/create/")
-    public JsonNode createItem(@RequestBody Item requestItem) {
-        Long itemId = stocksService.createItem(requestItem);
-        return objectMapper.createObjectNode().put("id", itemId);
+    public Long createItem(@RequestBody Item requestItem) {
+        Item item = stocksService.createItem(requestItem);
+        return item.getId();
     }
 
     @PostMapping("/add/{item_id}/{number}")

@@ -1,7 +1,5 @@
 package wdm.project.endpoint;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,15 +18,12 @@ import wdm.project.service.UsersService;
 public class UsersEndpoint {
 
     @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
     private UsersService usersService;
 
     @PostMapping("/create")
-    public JsonNode createUser(@RequestBody User requestUser) {
-        long userId = usersService.createUser(requestUser).getId();
-        return objectMapper.createObjectNode().put("id", userId);
+    public Long createUser(@RequestBody User requestUser) {
+        User user = usersService.createUser(requestUser);
+        return user.getId();
     }
 
     @DeleteMapping("/remove/{id}")
@@ -47,9 +42,8 @@ public class UsersEndpoint {
     }
 
     @GetMapping("/credit/{id}")
-    public JsonNode getUserCredit(@PathVariable("id") Long id) throws UsersException {
-        Integer credit = usersService.getUserCredit(id);
-        return objectMapper.createObjectNode().put("credit", credit);
+    public Integer getUserCredit(@PathVariable("id") Long id) throws UsersException {
+        return usersService.getUserCredit(id);
     }
 
     @PostMapping("/credit/subtract/{id}/{amount}")

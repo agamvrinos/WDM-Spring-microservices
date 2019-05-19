@@ -1,7 +1,5 @@
 package wdm.project.endpoint;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,13 +19,10 @@ public class PaymentsEndpoint {
     @Autowired
     private PaymentsService paymentsService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @GetMapping("/status/{order_id}")
-    public JsonNode getPaymentStatus(@PathVariable("order_id") Long orderId) throws PaymentException {
+    public String getPaymentStatus(@PathVariable("order_id") Long orderId) throws PaymentException {
         Payment payment = paymentsService.getPaymentByOrderId(orderId);
-        return objectMapper.createObjectNode().put("status", payment.getStatus());
+        return payment.getStatus();
     }
 
     @PostMapping("/pay/{order_id}/{user_id}/{total}")
