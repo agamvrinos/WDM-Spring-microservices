@@ -7,59 +7,60 @@ spring:
         git:
           uri: git@github.com:agamvrinos/WDM-Spring-microservices.git
           # the branch where the config files are located (master if not set) [did not work]
-          #default-label: configuration-files
+          default-label: configuration-files
           # the relative path in github repo where the config files are located
-          search-paths: services-config
+#          search-paths: services-config
           ignore-local-ssh-settings: true
-          # had the server running with this key before, now it says invalid private key
           private-key: |
-            -----BEGIN OPENSSH PRIVATE KEY-----
-            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
-            P6rffq+Uz9TuyQAAAAZjb25maWcBAgM=
-            -----END OPENSSH PRIVATE KEY-----
-
+            -----BEGIN RSA PRIVATE KEY-----
+            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
+            -----END RSA PRIVATE KEY-----
+          force-pull: true
