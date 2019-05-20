@@ -19,17 +19,5 @@ public class UsersRepository extends CouchDbRepositorySupport<User> {
         super(User.class, db);
         initStandardDesignDocument();
     }
-
-    @GenerateView
-    @Override
-    public List<User> getAll() {
-        ViewQuery q = createQuery("all").descending(true);
-        return db.queryView(q, User.class);
-    }
-
-    @GenerateView
-    public List<User> findById(String id) {
-        return queryView("by_id", id);
-    }
-
+    
 }
