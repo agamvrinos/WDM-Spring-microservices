@@ -1,21 +1,27 @@
 package wdm.project.dto;
 
-import java.io.Serializable;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.ektorp.support.CouchDbDocument;
+import org.ektorp.support.TypeDiscriminator;
 
-public class User implements Serializable {
+public class User extends CouchDbDocument {
 
-	private Long id;
+	@TypeDiscriminator
+	@JsonProperty("_id")
+	private String id;
+	@JsonProperty("name")
 	private String name;
+	@JsonProperty("credit")
 	private Integer credit;
 
 	public User() {
 	}
 
-	public Long getId() {
+	public String getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 

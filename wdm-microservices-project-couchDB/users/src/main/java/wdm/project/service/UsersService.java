@@ -10,8 +10,8 @@ import wdm.project.repository.UsersRepository;
 @Service
 public class UsersService {
 
-//    @Autowired
-//    private UsersRepository usersRepository;
+    @Autowired
+    private UsersRepository usersRepository;
 
     /**
      * Creates a new user.
@@ -20,12 +20,13 @@ public class UsersService {
      * to be stored
      * @return the created user
      */
-    public User createUser(User requestUser) {
-        //TODO: Uncomment + Replace w/ CouchDB calls
-//        User user = new User();
-//        user.setName(requestUser.getName());
-//        user.setCredit(requestUser.getCredit());
-//        return usersRepository.save(user);
+    public String createUser(User requestUser) {
+        User user = new User();
+        user.setName(requestUser.getName());
+        user.setCredit(requestUser.getCredit());
+        user.setId(requestUser.getId());
+        usersRepository.add(user);
+        return user.getId();
     }
 
     /**
@@ -34,10 +35,9 @@ public class UsersService {
      * @param id the id of the user to be removed
      * @throws UsersException in case the call to findUser fails
      */
-    public void removeUser(Long id) throws UsersException {
-        //TODO: Uncomment + Replace w/ CouchDB calls
-//        User storedUser = findUser(id);
-//        usersRepository.delete(storedUser);
+    public void removeUser(String id) throws UsersException {
+        User storedUser = findUser(id);
+        usersRepository.remove(storedUser);
     }
 
     /**
@@ -48,13 +48,13 @@ public class UsersService {
      * {@code credit} value
      * @throws UsersException in case the call to findUser fails
      */
-    public void updateUser(Long id, User requestUser) throws UsersException {
-        //TODO: Uncomment + Replace w/ CouchDB calls
-//        User storedUser = findUser(id);
-//        Integer requestCredit = requestUser.getCredit();
-//        storedUser.setCredit(requestCredit);
-//        usersRepository.save(storedUser);
+    public void updateUser(String id, User requestUser) throws UsersException {
+        User storedUser = findUser(id);
+        Integer requestCredit = requestUser.getCredit();
+        storedUser.setCredit(requestCredit);
+        usersRepository.update(storedUser);
     }
+
 
     /**
      * Finds the user with the provided id.
@@ -63,16 +63,15 @@ public class UsersService {
      * @return the user object with the provided i
      * @throws UsersException in case of invalid id
      */
-    public User findUser(Long id) throws UsersException {
-        //TODO: Uncomment + Replace w/ CouchDB calls
-//        if (id == null) {
-//            throw new UsersException("Id was not provided", HttpStatus.BAD_REQUEST);
-//        }
-//        boolean existsUser = usersRepository.existsById(id);
-//        if (!existsUser) {
-//            throw new UsersException("There is no user with id \"" + id + "\"", HttpStatus.NOT_FOUND);
-//        }
-//        return usersRepository.findById(id).orElseThrow(RuntimeException::new);
+    public User findUser(String id) throws UsersException {
+        if (id == null) {
+            throw new UsersException("Id was not provided", HttpStatus.BAD_REQUEST);
+        }
+        boolean existsUser = usersRepository.contains(id);
+        if (!existsUser) {
+            throw new UsersException("There is no user with id \"" + id + "\"", HttpStatus.NOT_FOUND);
+        }
+        return usersRepository.get(id);
     }
 
     /**
@@ -82,10 +81,9 @@ public class UsersService {
      * @return the credit of the user with the provided id
      * @throws UsersException in case the call to findUser fails
      */
-    public Integer getUserCredit(Long id) throws UsersException {
-        //TODO: Uncomment + Replace w/ CouchDB calls
-//        User storedUser = findUser(id);
-//        return storedUser.getCredit();
+    public Integer getUserCredit(String id) throws UsersException {
+        User storedUser = findUser(id);
+        return storedUser.getCredit();
     }
 
     /**
@@ -96,12 +94,11 @@ public class UsersService {
      * @param amount the amount to add to the existing credit
      * @throws UsersException in case the call to findUser fails
      */
-    public void addCredit(Long id, Integer amount) throws UsersException {
-        //TODO: Uncomment + Replace w/ CouchDB calls
-//        User user = findUser(id);
-//        Integer credit = user.getCredit();
-//        user.setCredit(credit + amount);
-//        usersRepository.save(user);
+    public void addCredit(String id, Integer amount) throws UsersException {
+        User user = findUser(id);
+        Integer credit = user.getCredit();
+        user.setCredit(credit + amount);
+        usersRepository.update(user);
     }
 
     /**
@@ -112,15 +109,14 @@ public class UsersService {
      * @param amount the amount to remove from the existing credit
      * @throws UsersException in case the current credits are insufficient
      */
-	public void subtractCredit(Long id, Integer amount) throws UsersException {
-	    //TODO: Uncomment + Replace w/ CouchDB calls
-//        User user = findUser(id);
-//        Integer credit = user.getCredit();
-//        if (amount > credit) {
-//        	throw new UsersException("Insufficient credit", HttpStatus.BAD_REQUEST);
-//        } else {
-//            user.setCredit(credit - amount);
-//            usersRepository.save(user);
-//        }
+    public void subtractCredit(String id, Integer amount) throws UsersException {
+        User user = findUser(id);
+        Integer credit = user.getCredit();
+        if (amount > credit) {
+            throw new UsersException("Insufficient credit", HttpStatus.BAD_REQUEST);
+        } else {
+            user.setCredit(credit - amount);
+            usersRepository.update(user);
+        }
     }
 }

@@ -1,5 +1,7 @@
 package wdm.project.endpoint;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,45 +20,51 @@ import wdm.project.service.UsersService;
 public class UsersEndpoint {
 
     @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
     private UsersService usersService;
 
     @PostMapping("/create")
-    public Long createUser(@RequestBody User requestUser) {
-        User user = usersService.createUser(requestUser);
-        return user.getId();
+    public JsonNode createUser(@RequestBody User requestUser) {
+        String userId = usersService.createUser(requestUser);
+        return objectMapper.createObjectNode().put("id", userId);
     }
 
     @DeleteMapping("/remove/{id}")
-    public void removeUser(@PathVariable("id") Long id) throws UsersException {
+    public void removeUser(@PathVariable("id") String id) throws UsersException {
         usersService.removeUser(id);
     }
 
     @PutMapping("/update/{id}")
-    public void updateUser(@PathVariable("id") Long id, @RequestBody User user) throws UsersException {
+    public void updateUser(@PathVariable("id") String id, @RequestBody User user) throws UsersException {
         usersService.updateUser(id, user);
     }
 
+    // TODO RETURN NAME AND AMOUNT
     @GetMapping("/find/{id}")
-    public User findUser(@PathVariable("id") Long id) throws UsersException {
-		return usersService.findUser(id);
+    public User findUser(@PathVariable("id") String id) throws UsersException {
+        return usersService.findUser(id);
     }
 
     @GetMapping("/credit/{id}")
-    public Integer getUserCredit(@PathVariable("id") Long id) throws UsersException {
-        return usersService.getUserCredit(id);
+    public JsonNode getUserCredit(@PathVariable("id") String id) throws UsersException {
+        Integer credit = usersService.getUserCredit(id);
+        return objectMapper.createObjectNode().put("credit", credit);
     }
 
     @PostMapping("/credit/subtract/{id}/{amount}")
     public void subtractCredit(
-            @PathVariable("id") Long id,
+            @PathVariable("id") String id,
             @PathVariable("amount") String amount
     ) throws UsersException {
+        // TODO RETURN SUCCESS OR FAILURE
         usersService.subtractCredit(id, Integer.parseInt(amount));
     }
 
     @PostMapping("/credit/add/{id}/{amount}")
     public void addCredit(
-            @PathVariable("id") Long id,
+            @PathVariable("id") String id,
             @PathVariable("amount") String amount
     ) throws UsersException {
         usersService.addCredit(id, Integer.parseInt(amount));
