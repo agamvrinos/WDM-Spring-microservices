@@ -1,4 +1,12 @@
 package wdm.project.repository;
 
-public class PaymentsRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import wdm.project.dto.Payment;
+
+@Repository
+public interface PaymentsRepository extends JpaRepository<Payment, Long> {
+	Boolean existsByOrderId(Long orderId);
+
+	Payment findByOrderId(Long orderId);
 }
