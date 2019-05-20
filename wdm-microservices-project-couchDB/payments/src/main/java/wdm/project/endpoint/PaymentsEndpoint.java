@@ -1,5 +1,7 @@
 package wdm.project.endpoint;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,25 +21,28 @@ public class PaymentsEndpoint {
     @Autowired
     private PaymentsService paymentsService;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @GetMapping("/status/{order_id}")
-    public String getPaymentStatus(@PathVariable("order_id") Long orderId) throws PaymentException {
+    public JsonNode getPaymentStatus(@PathVariable("order_id") String orderId) throws PaymentException {
         Payment payment = paymentsService.getPaymentByOrderId(orderId);
-        return payment.getStatus();
+        return objectMapper.createObjectNode().put("status", payment.getStatus());
     }
 
-    @PostMapping("/pay/{order_id}/{user_id}/{total}")
-    public void payOrder(
-            @PathVariable("order_id") Long orderId,
-            @PathVariable("user_id") Long userId,
-            @PathVariable("total") Integer total
-    ) throws PaymentException {
-        if (userId == null || total == null) {
-            throw new PaymentException("Params were not provided", HttpStatus.BAD_REQUEST);
-        }
-        Payment payment = paymentsService.payOrder(orderId, userId, total);
-        Status statusEnum = Status.findStatusEnum(payment.getStatus());
-        if (statusEnum != Status.SUCCESS) {
-            throw new PaymentException("Payment status is not \"SUCCESS\"", HttpStatus.BAD_REQUEST);
-        }
-    }
+//    @PostMapping("/pay/{order_id}/{user_id}/{total}")
+//    public void payOrder(
+//            @PathVariable("order_id") Long orderId,
+//            @PathVariable("user_id") Long userId,
+//            @PathVariable("total") Integer total
+//    ) throws PaymentException {
+//        if (userId == null || total == null) {
+//            throw new PaymentException("Params were not provided", HttpStatus.BAD_REQUEST);
+//        }
+//        Payment payment = paymentsService.payOrder(orderId, userId, total);
+//        Status statusEnum = Status.findStatusEnum(payment.getStatus());
+//        if (statusEnum != Status.SUCCESS) {
+//            throw new PaymentException("Payment status is not \"SUCCESS\"", HttpStatus.BAD_REQUEST);
+//        }
+//    }
 }

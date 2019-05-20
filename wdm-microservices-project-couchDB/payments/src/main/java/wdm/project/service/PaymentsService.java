@@ -10,21 +10,12 @@ import wdm.project.dto.Payment;
 import wdm.project.enums.Status;
 import wdm.project.exception.PaymentException;
 import wdm.project.repository.PaymentsRepository;
-import wdm.project.service.clients.PaymentsServiceClient;
-import wdm.project.service.clients.StocksServiceClient;
-import wdm.project.service.clients.UsersServiceClient;
 
 @Service
 public class PaymentsService {
 
     @Autowired
-    private StocksServiceClient stocksServiceClient;
-    @Autowired
-    private UsersServiceClient usersServiceClient;
-    @Autowired
-    private PaymentsServiceClient paymentsServiceClient;
-//    @Autowired
-//    private PaymentsRepository paymentsRepository;
+    private PaymentsRepository paymentsRepository;
 
     /**
      * Returns the payment instance that corresponds to the
@@ -37,33 +28,35 @@ public class PaymentsService {
      * "Pending" payment
      * @throws PaymentException when the provided order ID is null
      */
-    public Payment getPaymentByOrderId(Long orderId) throws PaymentException {
+    public Payment getPaymentByOrderId(String orderId) throws PaymentException {
         if (orderId == null) {
             throw new PaymentException("Order ID cannot be null", HttpStatus.BAD_REQUEST);
         }
-//        Payment payment;
-//        if (paymentsRepository.existsByOrderId(orderId)) {
-//            payment = paymentsRepository.findByOrderId(orderId);
-//        } else {
-//            payment = new Payment();
-//            payment.setOrderId(orderId);
-//            payment.setStatus(Status.PENDING.getValue());
-//        }
-//        return payment;
+        Payment payment;
+        // paymentsRepository.contains(orderId) only searches in the id field. Need to find how to search in other field instead
+//        System.out.print(paymentsRepository.findByOrderId(orderId));
+        if (paymentsRepository.contains(orderId)) {
+            payment = paymentsRepository.get(orderId);
+        } else {
+            payment = new Payment();
+            payment.setOrderId(orderId);
+            payment.setStatus(Status.PENDING.getValue());
+        }
+        return payment;
     }
 
-    /**
-     * Pays for the order with the provided ID by reducing the total price
-     * from the credit of the user with the provided ID.
-     *
-     * @param orderId the ID of the order
-     * @param userId the ID of the user
-     * @param totalPrice the price of the order to be paid by the user
-     * @return the Payment with the provided order ID
-     * @throws PaymentException when the communication with the Users
-     * microservice has failed
-     */
-    public Payment payOrder(Long orderId, Long userId, Integer totalPrice) throws PaymentException {
+//    /**
+//     * Pays for the order with the provided ID by reducing the total price
+//     * from the credit of the user with the provided ID.
+//     *
+//     * @param orderId the ID of the order
+//     * @param userId the ID of the user
+//     * @param totalPrice the price of the order to be paid by the user
+//     * @return the Payment with the provided order ID
+//     * @throws PaymentException when the communication with the Users
+//     * microservice has failed
+//     */
+//    public Payment payOrder(Long orderId, Long userId, Integer totalPrice) throws PaymentException {
 //        Payment payment = new Payment();
 //        payment.setOrderId(orderId);
 //        payment.setUserId(userId);
@@ -83,5 +76,5 @@ public class PaymentsService {
 //        }
 //        payment.setStatus(paymentStatus);
 //        return paymentsRepository.save(payment);
-    }
+//    }
 }
