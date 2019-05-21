@@ -5,7 +5,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import wdm.project.dto.ItemInfo;
 import wdm.project.dto.remote.Item;
+
+import java.util.List;
 
 @FeignClient(name = "stocks-service")
 public interface StocksServiceClient {
@@ -22,6 +25,6 @@ public interface StocksServiceClient {
 	@PostMapping("/stock/add/{item_id}/{number}")
 	void addItem(@PathVariable("item_id") Long itemId, @PathVariable("number") Integer itemNumber);
 
-	@PostMapping("/stock/subtract/{item_id}/{number}")
-	void subtractItem(@PathVariable("item_id") Long itemId, @PathVariable("number") Integer itemNumber);
+	@PostMapping("/stock/subtract")
+	Integer subtractItem(@RequestBody List<ItemInfo> itemInfos);
 }
