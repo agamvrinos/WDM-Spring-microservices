@@ -4,10 +4,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import wdm.project.dto.Item;
+import wdm.project.dto.remote.ItemInfo;
 import wdm.project.exception.StockException;
 import wdm.project.repository.StocksRepository;
 
+import javax.transaction.Transactional;
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
+@Transactional
 public class StocksService {
 
     @Autowired
@@ -77,20 +83,26 @@ public class StocksService {
     /**
      * Subtracts stock from the Item instance with the provided id.
      *
-     * @param itemId the id of the Item, the stock of which is
-     * is going to be updated
-     * @param subtractedStock the stock to be subtracted
+     * @param itemInfos item informations for all items which have to be subtracted.
+     * @return the total price of all subtracted items
      * @throws StockException when the item with the provided ID is not
      * found or the stock is insufficient.
      */
-    public void subtractItem(Long itemId, Integer subtractedStock) throws StockException {
-        Item item = getItem(itemId);
-        Integer currentStock = item.getStock();
-        if (subtractedStock > currentStock) {
-            throw new StockException("The stock of item ID " + itemId + " is " + currentStock +
-                                     " and can therefore not be reduced by " + subtractedStock + ".", HttpStatus.BAD_REQUEST);
+    public Integer subtractItems(List<ItemInfo> itemInfos) throws StockException {
+        ArrayList<Item> items = new ArrayList<>();
+        Integer totalPrice = 0;
+        for(ItemInfo itemInfo: itemInfos) {
+            Item item  = getItem(itemInfo.getId());
+            Integer currentStock = item.getStock();
+            if (itemInfo.getAmount() > currentStock) {
+                throw new StockException("The stock of item ID " + itemInfo.getId() + " is " + currentStock +
+                                         " and can therefore not be reduced by " + itemInfo.getAmount() + ".", HttpStatus.BAD_REQUEST);
+            }
+            item.setStock(currentStock - itemInfo.getAmount());
+            items.add(item);
+            totalPrice += itemInfo.getAmount() * item.getPrice();
         }
-        item.setStock(currentStock - subtractedStock);
-        stocksRepository.save(item);
+        stocksRepository.saveAll(items);
+        return totalPrice;
     }
 }
