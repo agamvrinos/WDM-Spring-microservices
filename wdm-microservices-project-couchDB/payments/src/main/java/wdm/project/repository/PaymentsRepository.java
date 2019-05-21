@@ -20,6 +20,6 @@ public class PaymentsRepository extends CouchDbRepositorySupport<Payment> {
 
 	@GenerateView
 	public List<Payment> findByOrderId(String orderId) {
-		return queryView("by_orderID", orderId);
+		return queryView("by_orderId", orderId);
 	}
 }

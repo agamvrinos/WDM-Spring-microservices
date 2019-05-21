@@ -33,10 +33,8 @@ public class PaymentsService {
             throw new PaymentException("Order ID cannot be null", HttpStatus.BAD_REQUEST);
         }
         Payment payment;
-        // paymentsRepository.contains(orderId) only searches in the id field. Need to find how to search in other field instead
-//        System.out.print(paymentsRepository.findByOrderId(orderId));
-        if (paymentsRepository.contains(orderId)) {
-            payment = paymentsRepository.get(orderId);
+        if (!paymentsRepository.findByOrderId(orderId).isEmpty()) {
+            payment = paymentsRepository.findByOrderId(orderId).get(0);
         } else {
             payment = new Payment();
             payment.setOrderId(orderId);
@@ -45,36 +43,44 @@ public class PaymentsService {
         return payment;
     }
 
-//    /**
-//     * Pays for the order with the provided ID by reducing the total price
-//     * from the credit of the user with the provided ID.
-//     *
-//     * @param orderId the ID of the order
-//     * @param userId the ID of the user
-//     * @param totalPrice the price of the order to be paid by the user
-//     * @return the Payment with the provided order ID
-//     * @throws PaymentException when the communication with the Users
-//     * microservice has failed
-//     */
-//    public Payment payOrder(Long orderId, Long userId, Integer totalPrice) throws PaymentException {
-//        Payment payment = new Payment();
-//        payment.setOrderId(orderId);
-//        payment.setUserId(userId);
-//
-//        String paymentStatus = Status.FAILURE.getValue();
-//        try {
-//            //TODO: Update communication
-//            RestTemplate re = new RestTemplate();
-//            JsonNode response = re.postForObject("http://localhost:8083/users/credit/subtract/" + userId + "/" + totalPrice, null, JsonNode.class);
-//            String responseStatus = response.get("status").asText();
-//            if (responseStatus != null) {
-//                paymentStatus = Status.findStatusEnum(responseStatus).getValue();
-//            }
-//        } catch (RestClientResponseException exception) {
-//            // TODO: Handle by checking other instances in case of timeout.
-//            throw new PaymentException("There was an exception while communicating with the Users microservice.", HttpStatus.INTERNAL_SERVER_ERROR);
-//        }
-//        payment.setStatus(paymentStatus);
-//        return paymentsRepository.save(payment);
-//    }
+    /**
+     * Pays for the order with the provided ID by reducing the total price
+     * from the credit of the user with the provided ID.
+     *
+     * @param orderId the ID of the order
+     * @param userId the ID of the user
+     * @param totalPrice the price of the order to be paid by the user
+     * @return the Payment with the provided order ID
+     * @throws PaymentException when the communication with the Users
+     * microservice has failed
+     */
+    public Payment payOrder(String orderId, String userId, Integer totalPrice) throws PaymentException {
+        Payment payment;
+        if (!paymentsRepository.findByOrderId(orderId).isEmpty()) {
+            payment = paymentsRepository.findByOrderId(orderId).get(0);
+        }
+        // If the payment does not exist, create a new one
+        else {
+            payment = new Payment();
+            payment.setOrderId(orderId);
+            payment.setUserId(userId);
+        }
+
+        String paymentStatus = Status.FAILURE.getValue();
+        try {
+            //TODO: Update communication
+            RestTemplate re = new RestTemplate();
+            JsonNode response = re.postForObject("http://localhost:8083/users/credit/subtract/" + userId + "/" + totalPrice, null, JsonNode.class);
+            String responseStatus = response.get("status").asText();
+            if (responseStatus != null) {
+                paymentStatus = Status.findStatusEnum(responseStatus).getValue();
+            }
+        } catch (RestClientResponseException exception) {
+            // TODO: Handle by checking other instances in case of timeout.
+            throw new PaymentException("There was an exception while communicating with the Users microservice.", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        payment.setStatus(paymentStatus);
+        paymentsRepository.add(payment);
+        return payment;
+    }
 }

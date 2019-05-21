@@ -5,10 +5,10 @@ import org.ektorp.support.CouchDbDocument;
 
 public class Payment extends CouchDbDocument {
 
-    @JsonProperty("user_id")
+    @JsonProperty("userId")
     private String userId;
 
-    @JsonProperty("order_id")
+    @JsonProperty("orderId")
     private String orderId;
 
     @JsonProperty("status")
