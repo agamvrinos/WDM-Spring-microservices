@@ -1,6 +1,6 @@
 spring:
   application:
-    name: userservice
+    name: users-service
   cloud:
     config:
       # this should be read dynamically (maybe ENV variable later)

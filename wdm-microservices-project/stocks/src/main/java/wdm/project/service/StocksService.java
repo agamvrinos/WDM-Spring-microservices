@@ -49,15 +49,14 @@ public class StocksService {
      * {@code requestItem}.
      *
      * @param requestItem the request item
-     * @return the id of the stored item
+     * @return the created item
      */
-    public Long createItem(Item requestItem) {
+    public Item createItem(Item requestItem) {
         Item item = new Item();
         item.setTitle(requestItem.getTitle());
         item.setStock(requestItem.getStock());
         item.setPrice(requestItem.getPrice());
-        Item storedItem = stocksRepository.save(item);
-        return storedItem.getId();
+        return stocksRepository.save(item);
     }
 
     /**

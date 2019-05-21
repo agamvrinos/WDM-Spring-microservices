@@ -1,6 +1,6 @@
 spring:
   application:
-    name: paymentservice
+    name: payments-service
   cloud:
     config:
       # this should be read dynamically (maybe ENV variable later)
