@@ -6,22 +6,27 @@ services:
     ports:
       - "8888:8888"
 
-  order-service:
+  eureka-service:
+    image: wdm/config
+    ports:
+      - "8761:8761"
+
+  orders-service:
     image: wdm/orders
     ports:
       - "8080:8080"
 
-  payment-service:
+  payments-service:
     image: wdm/payments
     ports:
       - "8081:8081"
 
-  stock-service:
+  stocks-service:
     image: wdm/stocks
     ports:
       - "8082:8082"
 
-  user-service:
+  users-service:
     image: wdm/users
     ports:
       - "8083:8083"
