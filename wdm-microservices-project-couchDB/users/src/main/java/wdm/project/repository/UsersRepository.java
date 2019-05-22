@@ -19,5 +19,5 @@ public class UsersRepository extends CouchDbRepositorySupport<User> {
         super(User.class, db);
         initStandardDesignDocument();
     }
-    
+
 }

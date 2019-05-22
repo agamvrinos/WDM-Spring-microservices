@@ -2,19 +2,21 @@ package wdm.project.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class OrdersWrapper {
 
     @JsonProperty("status")
     private String paymentStatus;
     @JsonProperty("userId")
-    private Long userId;
+    private String userId;
     @JsonProperty("items")
-    private List<ItemInfo> orderItems;
+    private Set<OrderItem> orderItems;
 
     public OrdersWrapper(){
-        this.orderItems = new ArrayList<>();
+        this.orderItems = new HashSet<>();
     }
 
     public String getPaymentStatus() {
@@ -25,19 +27,19 @@ public class OrdersWrapper {
         this.paymentStatus = paymentStatus;
     }
 
-    public Long getUserId() {
+    public String getUserId() {
         return userId;
     }
 
-    public void setUserId(Long userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
 
-    public List<ItemInfo> getOrderItems() {
+    public Set<OrderItem> getOrderItems() {
         return orderItems;
     }
 
-    public void setOrderItems(List<ItemInfo> orderItems) {
+    public void setOrderItems(Set<OrderItem> orderItems) {
         this.orderItems = orderItems;
     }
 

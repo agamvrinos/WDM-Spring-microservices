@@ -1,22 +1,35 @@
 package wdm.project.dto;
 
-import java.io.Serializable;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.ektorp.support.CouchDbDocument;
 
-public class OrderItem implements Serializable {
-    private OrderItemId id;
+public class OrderItem extends CouchDbDocument {
+
+    @JsonProperty("item_id")
+    private String itemId;
+    @JsonProperty("order_id")
+    private String orderId;
+    @JsonProperty("amount")
     private Integer amount;
 
     public OrderItem(){
-        this.id = new OrderItemId();
+
     }
 
-    public OrderItemId getId() {
-        return id;
+    public String getItemId() {
+        return itemId;
     }
 
-    public void setId(Long orderId, Long itemId) {
-        this.id.setOrderId(orderId);
-        this.id.setItemId(itemId);
+    public void setItemId(String itemId) {
+        this.itemId = itemId;
+    }
+
+    public String getOrderId() {
+        return orderId;
+    }
+
+    public void setOrderId(String orderId) {
+        this.orderId = orderId;
     }
 
     public Integer getAmount() {
@@ -30,7 +43,7 @@ public class OrderItem implements Serializable {
     @Override
     public String toString() {
         return "OrderItems{" +
-                "order_item_id=" + this.id + '\'' +
+                "order_item_id=" + this.itemId + '\'' +
                 ", amount=" + this.amount +
                 '}';
     }

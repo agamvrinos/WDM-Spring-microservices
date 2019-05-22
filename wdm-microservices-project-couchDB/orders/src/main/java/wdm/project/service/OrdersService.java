@@ -3,6 +3,7 @@ package wdm.project.service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -13,8 +14,8 @@ import wdm.project.dto.OrderItem;
 import wdm.project.dto.OrderItemId;
 import wdm.project.dto.OrdersWrapper;
 import wdm.project.exception.OrderException;
-import wdm.project.repository.OrdersItemsRepository;
-import wdm.project.repository.OrdersRepository;
+import wdm.project.repository.OrderItemRepository;
+import wdm.project.repository.OrderRepository;
 import wdm.project.service.clients.PaymentsServiceClient;
 import wdm.project.service.clients.StocksServiceClient;
 import wdm.project.service.clients.UsersServiceClient;
@@ -22,16 +23,16 @@ import wdm.project.service.clients.UsersServiceClient;
 @Service
 public class OrdersService {
 
-	@Autowired
-	private StocksServiceClient stocksServiceClient;
-	@Autowired
-	private UsersServiceClient usersServiceClient;
-	@Autowired
-	private PaymentsServiceClient paymentsServiceClient;
-//    @Autowired
-//    private OrdersRepository ordersRepository;
-//    @Autowired
-//    private OrdersItemsRepository ordersItemsRepository;
+//	@Autowired
+//	private StocksServiceClient stocksServiceClient;
+//	@Autowired
+//	private UsersServiceClient usersServiceClient;
+//	@Autowired
+//	private PaymentsServiceClient paymentsServiceClient;
+    @Autowired
+    private OrderRepository ordersRepository;
+    @Autowired
+    private OrderItemRepository ordersItemsRepository;
 
     /**
      * Initializes an order in the micro-service's database with zero
@@ -42,16 +43,16 @@ public class OrdersService {
      * @return the order that is created
      * @throws OrderException in case the id of the user was not provided
      */
-    public Order createOrder(Long userId) throws OrderException {
+    public String createOrder(String userId) throws OrderException {
     	if (userId == null) {
     		throw new OrderException("User id was not provided", HttpStatus.BAD_REQUEST);
 	    }
-//        Order order = new Order();
-//        order.setUserId(userId);
-//        order.setTotal(0);
-//        ordersRepository.save(order);
-//
-//        return  order;
+        Order order = new Order();
+        order.setUserId(userId);
+        order.setTotal(0);
+        ordersRepository.add(order);
+
+        return  order.getId();
     }
 
     /**
@@ -61,14 +62,14 @@ public class OrdersService {
      * @param orderId the id of the order to be deleted
      * @throws OrderException when the order with the provided ID is not found
      */
-    public void removeOrder(Long orderId) throws OrderException {
-//        if (ordersRepository.existsById(orderId)) {
-//        	//FIXME: This needs to be changed!!
-//            ordersItemsRepository.deleteById_OrderId(orderId);
-//            ordersRepository.deleteById(orderId);
-//        } else {
-//            throw new OrderException("There is no order with ID " + orderId + ".", HttpStatus.NOT_FOUND);
-//        }
+    public void removeOrder(String orderId) throws OrderException {
+        if (ordersRepository.contains(orderId)) {
+        	//FIXME: remove the orderItems also?
+            Order storedOrder = ordersRepository.get(orderId);
+            ordersRepository.remove(storedOrder);
+        } else {
+            throw new OrderException("There is no order with ID " + orderId + ".", HttpStatus.NOT_FOUND);
+        }
     }
 
     /**
@@ -81,28 +82,29 @@ public class OrdersService {
      * @throws OrderException when the order id was not provided or the
      * order with the provided ID is not found
      */
-    public OrdersWrapper findOrder(Long orderId) throws OrderException {
+    public OrdersWrapper findOrder(String orderId) throws OrderException {
 		if (orderId == null) {
 			throw new OrderException("The order id was not provided");
 		}
-//        OrdersWrapper ordersWrapper = new OrdersWrapper();
-//
-//        Optional<Order> orderOptional  = ordersRepository.findById(orderId);
+        OrdersWrapper ordersWrapper = new OrdersWrapper();
+
+        Order order  = ordersRepository.get(orderId);
 //        Order order = orderOptional.orElseThrow(
 //				        () -> new OrderException("Order with ID " + orderId + " not found.", HttpStatus.NOT_FOUND));
-//
-//        List<OrderItem> orderItems = ordersItemsRepository.findAllById_OrderId(orderId);
+
+        Set<OrderItem> orderItems = order.getOrderItems();
+        System.out.println(orderItems.size());
 //        List<ItemInfo> itemsInfo = new ArrayList<>();
 //	    for (OrderItem item : orderItems) {
-//		    ItemInfo itemInfo = new ItemInfo(item.getId().getItemId(), item.getAmount());
+//		    ItemInfo itemInfo = new ItemInfo(item.getItemId(), item.getAmount());
 //		    itemsInfo.add(itemInfo);
 //	    }
-//
-//        ordersWrapper.setOrderItems(itemsInfo);
-//        ordersWrapper.setPaymentStatus("SUCCESSFUL"); // TODO call the payment microservice for that
-//        ordersWrapper.setUserId(order.getUserId());
-//
-//        return ordersWrapper;
+
+        ordersWrapper.setOrderItems(orderItems);
+        ordersWrapper.setPaymentStatus("SUCCESSFUL"); // TODO call the payment microservice for that
+        ordersWrapper.setUserId(order.getUserId());
+
+        return ordersWrapper;
     }
 
     /**
@@ -113,32 +115,39 @@ public class OrdersService {
      * @param itemId the id of the item
      * @param orderId the id of the order the item is linked to
      */
-    public void addItem(OrderItem requestOrderItem, Long orderId, Long itemId) throws OrderException {
+    public void addItem(OrderItem requestOrderItem, String orderId, String itemId) throws OrderException {
     	if (orderId == null) {
     		throw new OrderException("Order id was not provided");
 	    }
 	    if (itemId == null) {
 		    throw new OrderException("Item id was not provided");
 	    }
-//	    boolean existsOrder = ordersRepository.existsById(orderId);
-//	    if (!existsOrder) {
-//	    	throw new OrderException("There is no order with it \"" + orderId + "\"");
-//	    }
-//
-//        //TODO: Items price could be stored here when we call the stock service so we dont have to call again
-//        OrderItemId orderItemId = new OrderItemId(orderId, itemId);
-//        if (ordersItemsRepository.existsById(orderItemId)) {
-//            Optional<OrderItem> orderItemOptional = ordersItemsRepository.findById(orderItemId);
+	    boolean existsOrder = ordersRepository.contains(orderId);
+	    if (!existsOrder) {
+	    	throw new OrderException("There is no order with it \"" + orderId + "\"");
+	    }
+
+        //TODO: Items price could be stored here when we call the stock service so we dont have to call again
+        //OrderItemId orderItemId = new OrderItemId(orderId, itemId);
+//        if (ordersRepository.contains(orderId)) {
+//            //Optional<OrderItem> orderItemOptional = ordersItemsRepository.findById(orderItemId);
 //            OrderItem orderItem = orderItemOptional.orElseThrow(
 //		            () -> new OrderException("There was no order item with such id", HttpStatus.NOT_FOUND));
 //            int amount = orderItem.getAmount() + requestOrderItem.getAmount();
 //            orderItem.setAmount(amount);
 //            ordersItemsRepository.save(orderItem);
 //        } else {
-//            OrderItem orderItem = new  OrderItem();
-//            orderItem.setId(orderId, itemId);
-//            orderItem.setAmount(requestOrderItem.getAmount());
-//            ordersItemsRepository.save(orderItem);
+            Order order = ordersRepository.get(orderId);
+            OrderItem orderItem = new  OrderItem();
+            //orderItem.setId(orderId, itemId);
+            orderItem.setItemId(itemId);
+            orderItem.setAmount(requestOrderItem.getAmount());
+
+            Set<OrderItem> orderItems = order.getOrderItems();
+            orderItems.add(orderItem); // FIXME check an yparxei
+            order.setOrderItems(orderItems);
+
+            ordersRepository.update(order);
 //        }
     }
 
@@ -149,9 +158,9 @@ public class OrdersService {
      * @param itemId the id of the item that is to be removed
      * @throws OrderException when the OrderItem with provided IDs cannot be found.
      */
-    public void removeItem(Long orderId, Long itemId) throws OrderException {
+    public void removeItem(String orderId, String itemId) throws OrderException {
 //        OrderItemId orderItemId = new OrderItemId(orderId, itemId);
-//        if (ordersItemsRepository.existsById(orderItemId)) {
+//        if (ordersItemsRepository.contains().existsById(orderItemId)) {
 //            ordersItemsRepository.deleteById(orderItemId);
 //        } else {
 //            throw new OrderException("Unable to remove item with ID " + itemId + " from order with ID " + orderId + ".", HttpStatus.NOT_FOUND);
@@ -166,7 +175,7 @@ public class OrdersService {
      * successful transaction
      * FAILURE for a failed transaction.
      */
-    public String checkoutOrder(Long orderId){
+    public String checkoutOrder(String orderId){
         // TODO: connect everything
         return "FAILURE";
     }

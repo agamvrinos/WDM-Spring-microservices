@@ -1,29 +1,35 @@
 package wdm.project.dto;
 
-import java.io.Serializable;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.ektorp.docref.DocumentReferences;
+import org.ektorp.docref.FetchType;
+import org.ektorp.support.CouchDbDocument;
+import org.ektorp.support.TypeDiscriminator;
 
-public class Order implements Serializable {
+import java.util.List;
+import java.util.Set;
 
-    private Long id;
-    private Long userId;
+public class Order extends CouchDbDocument {
+
+
+    @JsonProperty("user_id")
+    private String userId;
+    @JsonProperty("total")
     private Integer total;
+//  LAZY = fetch when needed
+//  EAGER = fetch immediately
+    @JsonProperty("items")
+    @DocumentReferences(fetch = FetchType.LAZY, backReference = "order_id")
+    private Set<OrderItem> orderItems;
 
     public Order() {
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Long getUserId() {
+    public String getUserId() {
         return userId;
     }
 
-    public void setUserId(Long userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
 
@@ -35,10 +41,18 @@ public class Order implements Serializable {
         this.total = total;
     }
 
+    public Set<OrderItem> getOrderItems() {
+        return orderItems;
+    }
+
+    public void setOrderItems(Set<OrderItem> orderItems) {
+        this.orderItems = orderItems;
+    }
+
     @Override
     public String toString() {
         return "Order{" +
-                "id=" + id +
+                "id=" + super.getId() +
                 ", user_id='" + this.userId + '\'' +
                 ", total=" + this.total +
                 '}';
