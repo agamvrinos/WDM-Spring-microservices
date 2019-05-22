@@ -64,8 +64,11 @@ public class PaymentsService {
             payment = new Payment();
             payment.setOrderId(orderId);
             payment.setUserId(userId);
+            // The newly created order should be pending
+            payment.setStatus(Status.PENDING.getValue());
         }
-
+        System.out.println(payment);
+        // Why initialize it with failure and not pending??
         String paymentStatus = Status.FAILURE.getValue();
         try {
             //TODO: Update communication
