@@ -1,8 +1,6 @@
 package wdm.project.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 
 
@@ -16,7 +14,7 @@ public class OrdersWrapper {
     private List<ItemInfo> orderItems;
 
     public OrdersWrapper(){
-        ;
+
     }
 
     public String getPaymentStatus() {

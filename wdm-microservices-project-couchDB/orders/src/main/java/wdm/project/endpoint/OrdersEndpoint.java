@@ -10,8 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import wdm.project.dto.Order;
-import wdm.project.dto.OrderItem;
+import wdm.project.dto.ItemInfo;
 import wdm.project.dto.OrdersWrapper;
 import wdm.project.exception.OrderException;
 import wdm.project.service.OrdersService;
@@ -28,8 +27,7 @@ public class OrdersEndpoint {
 
     @PostMapping("/create/{user_id}")
     public String createOrder(@PathVariable("user_id") String userId) throws OrderException {
-        //Order order = ordersService.createOrder(userId);
-        return ordersService.createOrder(userId);//objectMapper.createObjectNode().put("orderId", order.getId());
+        return ordersService.createOrder(userId);
     }
 
     @DeleteMapping("/remove/{order_id}")
@@ -44,7 +42,7 @@ public class OrdersEndpoint {
 
     @PostMapping("/addItem/{order_id}/{item_id}")
     public void addItem(
-            @RequestBody OrderItem requestOrderItem,
+            @RequestBody ItemInfo requestOrderItem,
             @PathVariable("order_id") String orderId,
             @PathVariable("item_id") String itemId
     ) throws OrderException {

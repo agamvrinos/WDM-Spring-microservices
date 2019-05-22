@@ -1,20 +1,14 @@
 package wdm.project.service;
 
-
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import wdm.project.dto.ItemInfo;
 import wdm.project.dto.Order;
-import wdm.project.dto.OrderItem;
 import wdm.project.dto.OrdersWrapper;
 import wdm.project.exception.OrderException;
-import wdm.project.repository.OrderItemRepository;
 import wdm.project.repository.OrderRepository;
-
 
 @Service
 public class OrdersService {
@@ -27,8 +21,6 @@ public class OrdersService {
 //	private PaymentsServiceClient paymentsServiceClient;
     @Autowired
     private OrderRepository ordersRepository;
-    @Autowired
-    private OrderItemRepository ordersItemsRepository;
 
     /**
      * Initializes an order in the micro-service's database with zero
@@ -87,17 +79,8 @@ public class OrdersService {
         }
 
         Order order  = ordersRepository.get(orderId);
-
-        List<OrderItem> orderItems = ordersItemsRepository.findByOrderId(orderId);
-
-        List<ItemInfo> itemsInfo = new ArrayList<>();
-	    for (OrderItem item : orderItems) {
-		    ItemInfo itemInfo = new ItemInfo(item.getItemId(), item.getAmount());
-		    itemsInfo.add(itemInfo);
-	    }
-
         OrdersWrapper ordersWrapper = new OrdersWrapper();
-        ordersWrapper.setOrderItems(itemsInfo);
+        ordersWrapper.setOrderItems(order.getOrderItems());
         ordersWrapper.setPaymentStatus("SUCCESSFUL"); // TODO call the payment microservice for that
         ordersWrapper.setUserId(order.getUserId());
 
@@ -112,45 +95,33 @@ public class OrdersService {
      * @param itemId the id of the item
      * @param orderId the id of the order the item is linked to
      */
-    public void addItem(OrderItem requestOrderItem, String orderId, String itemId) throws OrderException {
-    	if (orderId == null) {
-    		throw new OrderException("Order id was not provided");
-	    }
-	    if (itemId == null) {
-		    throw new OrderException("Item id was not provided");
-	    }
-	    boolean existsOrder = ordersRepository.contains(orderId);
-	    if (!existsOrder) {
-	    	throw new OrderException("There is no order with it \"" + orderId + "\"");
-	    }
+    public void addItem(ItemInfo requestOrderItem, String orderId, String itemId) throws OrderException {
 
-        if (!ordersItemsRepository.findByOrderId(orderId).isEmpty()) {
+        checkItems(orderId, itemId);
 
-            List<OrderItem> orderItems = ordersItemsRepository.findByOrderId(orderId);
+	    Order storedOrder = ordersRepository.get(orderId);
+	    List<ItemInfo> storedItems =  storedOrder.getOrderItems();
 
-            for (OrderItem item : orderItems) {
-                System.out.println(item.getId());
-                if (item.getItemId().equals(itemId)){
+	    boolean storedFlag = false;
 
-                    OrderItem orderItem = new OrderItem();
-                    orderItem.setAmount(item.getAmount()+requestOrderItem.getAmount());
-                    orderItem.setOrderId(item.getOrderId());
-                    orderItem.setItemId(item.getItemId());
-                    orderItem.setId(item.getId());
-
-                    orderItem.setRevision(item.getRevision());
-                    ordersItemsRepository.update(orderItem);
-
+        if (!storedItems.isEmpty()){
+            for (ItemInfo storedItem : storedItems) {
+                if (storedItem.getId().equals(itemId)) {
+                    storedItem.setAmount(storedItem.getAmount() + requestOrderItem.getAmount());
+                    ordersRepository.update(storedOrder);
+                    storedFlag = true;
+                    break;
                 }
             }
         }
 
-        OrderItem orderItem = new OrderItem();
-        orderItem.setItemId(itemId);
-        orderItem.setOrderId(orderId);
-        orderItem.setAmount(requestOrderItem.getAmount());
-
-        ordersItemsRepository.add(orderItem);
+        if(!storedFlag){
+            ItemInfo newItem = new ItemInfo();
+            newItem.setAmount(requestOrderItem.getAmount());
+            newItem.setId(itemId);
+            storedItems.add(newItem);
+            ordersRepository.update(storedOrder);
+        }
 
     }
 
@@ -162,12 +133,24 @@ public class OrdersService {
      * @throws OrderException when the OrderItem with provided IDs cannot be found.
      */
     public void removeItem(String orderId, String itemId) throws OrderException {
-//        OrderItemId orderItemId = new OrderItemId(orderId, itemId);
-//        if (ordersItemsRepository.contains().existsById(orderItemId)) {
-//            ordersItemsRepository.deleteById(orderItemId);
-//        } else {
-//            throw new OrderException("Unable to remove item with ID " + itemId + " from order with ID " + orderId + ".", HttpStatus.NOT_FOUND);
-//        }
+
+        checkItems(orderId, itemId);
+
+        if (ordersRepository.contains(orderId)){
+            Order storedOrder = ordersRepository.get(orderId);
+            List<ItemInfo> storedItems =  storedOrder.getOrderItems();
+
+            for (ItemInfo storedItem : storedItems) {
+                if (storedItem.getId().equals(itemId)) {
+                    storedItems.remove(storedItem);
+                    ordersRepository.update(storedOrder);
+                    break;
+                }
+            }
+
+        } else {
+            throw new OrderException("Unable to remove item with ID " + itemId + " from order with ID " + orderId + ".", HttpStatus.NOT_FOUND);
+        }
     }
 
     /**
@@ -182,4 +165,20 @@ public class OrdersService {
         // TODO: connect everything
         return "FAILURE";
     }
+
+
+     private void checkItems(String orderId, String itemId)throws OrderException{
+        if (orderId == null) {
+            throw new OrderException("Order id was not provided");
+        }
+        if (itemId == null) {
+            throw new OrderException("Item id was not provided");
+        }
+        boolean existsOrder = ordersRepository.contains(orderId);
+        if (!existsOrder) {
+            throw new OrderException("There is no order with it \"" + orderId + "\"");
+        }
+    }
+
+
 }

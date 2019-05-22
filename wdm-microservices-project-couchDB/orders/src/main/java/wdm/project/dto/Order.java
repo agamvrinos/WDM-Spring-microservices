@@ -1,14 +1,9 @@
 package wdm.project.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.ektorp.docref.DocumentReferences;
-import org.ektorp.docref.FetchType;
 import org.ektorp.support.CouchDbDocument;
-import org.ektorp.support.TypeDiscriminator;
-
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 public class Order extends CouchDbDocument {
 
@@ -16,14 +11,11 @@ public class Order extends CouchDbDocument {
     private String userId;
     @JsonProperty("total")
     private Integer total;
-//  LAZY = fetch when needed
-//  EAGER = fetch immediately
     @JsonProperty("items")
-    @DocumentReferences(fetch = FetchType.LAZY, backReference = "orderId")
-    private Set<OrderItem> orderItems;
+    private List<ItemInfo> orderItems;
 
     public Order() {
-       // this.orderItems = new HashSet<>();
+        this.orderItems = new ArrayList<>();
     }
 
     public String getUserId() {
@@ -42,13 +34,9 @@ public class Order extends CouchDbDocument {
         this.total = total;
     }
 
-    public Set<OrderItem> getOrderItems() {
-        return orderItems;
-    }
+    public List<ItemInfo> getOrderItems() { return orderItems; }
 
-    public void setOrderItems(Set<OrderItem> orderItems) {
-        this.orderItems = orderItems;
-    }
+    public void setOrderItems(List<ItemInfo> orderItems) { this.orderItems = orderItems; }
 
     @Override
     public String toString() {

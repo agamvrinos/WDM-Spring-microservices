@@ -6,16 +6,11 @@ public class ItemInfo {
 
 	@JsonProperty("itemId")
 	private String id;
-
 	@JsonProperty("amount")
 	private Integer amount;
 
 	public ItemInfo() {
-	}
 
-	public ItemInfo(String itemId, Integer amount){
-		this.id = itemId;
-		this. amount = amount;
 	}
 
 	public String getId() {
