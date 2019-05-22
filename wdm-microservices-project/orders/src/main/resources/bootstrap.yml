@@ -1,3 +1,7 @@
 spring:
   application:
     name: orders-service
+  cloud:
+    config:
+      # this should be read dynamically (maybe ENV variable later)
+      uri: http://localhost:8888
