@@ -1,24 +1,20 @@
 package wdm.project.service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import wdm.project.dto.ItemInfo;
 import wdm.project.dto.Order;
 import wdm.project.dto.OrderItem;
-import wdm.project.dto.OrderItemId;
 import wdm.project.dto.OrdersWrapper;
 import wdm.project.exception.OrderException;
 import wdm.project.repository.OrderItemRepository;
 import wdm.project.repository.OrderRepository;
-import wdm.project.service.clients.PaymentsServiceClient;
-import wdm.project.service.clients.StocksServiceClient;
-import wdm.project.service.clients.UsersServiceClient;
+
 
 @Service
 public class OrdersService {
@@ -86,21 +82,22 @@ public class OrdersService {
 		if (orderId == null) {
 			throw new OrderException("The order id was not provided");
 		}
-        OrdersWrapper ordersWrapper = new OrdersWrapper();
+		if (!ordersRepository.contains(orderId)){
+            throw new OrderException("The order does not exist");
+        }
 
         Order order  = ordersRepository.get(orderId);
-//        Order order = orderOptional.orElseThrow(
-//				        () -> new OrderException("Order with ID " + orderId + " not found.", HttpStatus.NOT_FOUND));
 
-        Set<OrderItem> orderItems = order.getOrderItems();
-        System.out.println(orderItems.size());
-//        List<ItemInfo> itemsInfo = new ArrayList<>();
-//	    for (OrderItem item : orderItems) {
-//		    ItemInfo itemInfo = new ItemInfo(item.getItemId(), item.getAmount());
-//		    itemsInfo.add(itemInfo);
-//	    }
+        List<OrderItem> orderItems = ordersItemsRepository.findByOrderId(orderId);
 
-        ordersWrapper.setOrderItems(orderItems);
+        List<ItemInfo> itemsInfo = new ArrayList<>();
+	    for (OrderItem item : orderItems) {
+		    ItemInfo itemInfo = new ItemInfo(item.getItemId(), item.getAmount());
+		    itemsInfo.add(itemInfo);
+	    }
+
+        OrdersWrapper ordersWrapper = new OrdersWrapper();
+        ordersWrapper.setOrderItems(itemsInfo);
         ordersWrapper.setPaymentStatus("SUCCESSFUL"); // TODO call the payment microservice for that
         ordersWrapper.setUserId(order.getUserId());
 
@@ -127,28 +124,34 @@ public class OrdersService {
 	    	throw new OrderException("There is no order with it \"" + orderId + "\"");
 	    }
 
-        //TODO: Items price could be stored here when we call the stock service so we dont have to call again
-        //OrderItemId orderItemId = new OrderItemId(orderId, itemId);
-//        if (ordersRepository.contains(orderId)) {
-//            //Optional<OrderItem> orderItemOptional = ordersItemsRepository.findById(orderItemId);
-//            OrderItem orderItem = orderItemOptional.orElseThrow(
-//		            () -> new OrderException("There was no order item with such id", HttpStatus.NOT_FOUND));
-//            int amount = orderItem.getAmount() + requestOrderItem.getAmount();
-//            orderItem.setAmount(amount);
-//            ordersItemsRepository.save(orderItem);
-//        } else {
-            Order order = ordersRepository.get(orderId);
-            OrderItem orderItem = new  OrderItem();
-            //orderItem.setId(orderId, itemId);
-            orderItem.setItemId(itemId);
-            orderItem.setAmount(requestOrderItem.getAmount());
+        if (!ordersItemsRepository.findByOrderId(orderId).isEmpty()) {
 
-            Set<OrderItem> orderItems = order.getOrderItems();
-            orderItems.add(orderItem); // FIXME check an yparxei
-            order.setOrderItems(orderItems);
+            List<OrderItem> orderItems = ordersItemsRepository.findByOrderId(orderId);
 
-            ordersRepository.update(order);
-//        }
+            for (OrderItem item : orderItems) {
+                System.out.println(item.getId());
+                if (item.getItemId().equals(itemId)){
+
+                    OrderItem orderItem = new OrderItem();
+                    orderItem.setAmount(item.getAmount()+requestOrderItem.getAmount());
+                    orderItem.setOrderId(item.getOrderId());
+                    orderItem.setItemId(item.getItemId());
+                    orderItem.setId(item.getId());
+
+                    orderItem.setRevision(item.getRevision());
+                    ordersItemsRepository.update(orderItem);
+
+                }
+            }
+        }
+
+        OrderItem orderItem = new OrderItem();
+        orderItem.setItemId(itemId);
+        orderItem.setOrderId(orderId);
+        orderItem.setAmount(requestOrderItem.getAmount());
+
+        ordersItemsRepository.add(orderItem);
+
     }
 
     /**

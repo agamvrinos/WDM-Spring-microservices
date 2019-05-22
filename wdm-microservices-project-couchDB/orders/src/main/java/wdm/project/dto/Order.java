@@ -6,11 +6,11 @@ import org.ektorp.docref.FetchType;
 import org.ektorp.support.CouchDbDocument;
 import org.ektorp.support.TypeDiscriminator;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 public class Order extends CouchDbDocument {
-
 
     @JsonProperty("user_id")
     private String userId;
@@ -19,10 +19,11 @@ public class Order extends CouchDbDocument {
 //  LAZY = fetch when needed
 //  EAGER = fetch immediately
     @JsonProperty("items")
-    @DocumentReferences(fetch = FetchType.LAZY, backReference = "order_id")
+    @DocumentReferences(fetch = FetchType.LAZY, backReference = "orderId")
     private Set<OrderItem> orderItems;
 
     public Order() {
+       // this.orderItems = new HashSet<>();
     }
 
     public String getUserId() {

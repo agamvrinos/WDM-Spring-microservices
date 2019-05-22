@@ -1,15 +1,13 @@
 package wdm.project.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.ektorp.support.CouchDbDocument;
 
 public class OrderItem extends CouchDbDocument {
 
-    @JsonProperty("item_id")
-    private String itemId;
-    @JsonProperty("order_id")
     private String orderId;
-    @JsonProperty("amount")
+
+    private String itemId;
+
     private Integer amount;
 
     public OrderItem(){

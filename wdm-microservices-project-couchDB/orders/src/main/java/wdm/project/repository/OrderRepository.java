@@ -1,8 +1,5 @@
 package wdm.project.repository;
 
-
-import java.util.*;
-
 import org.ektorp.*;
 import org.ektorp.support.*;
 import org.springframework.beans.factory.annotation.*;

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+
 
 public class OrdersWrapper {
 
@@ -13,10 +13,10 @@ public class OrdersWrapper {
     @JsonProperty("userId")
     private String userId;
     @JsonProperty("items")
-    private Set<OrderItem> orderItems;
+    private List<ItemInfo> orderItems;
 
     public OrdersWrapper(){
-        this.orderItems = new HashSet<>();
+        ;
     }
 
     public String getPaymentStatus() {
@@ -35,11 +35,11 @@ public class OrdersWrapper {
         this.userId = userId;
     }
 
-    public Set<OrderItem> getOrderItems() {
+    public List<ItemInfo> getOrderItems() {
         return orderItems;
     }
 
-    public void setOrderItems(Set<OrderItem> orderItems) {
+    public void setOrderItems(List<ItemInfo> orderItems) {
         this.orderItems = orderItems;
     }
 
