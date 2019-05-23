@@ -1,9 +1,6 @@
 package wdm.project.service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
+import feign.FeignException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -12,20 +9,22 @@ import wdm.project.dto.Order;
 import wdm.project.dto.OrderItem;
 import wdm.project.dto.OrderItemId;
 import wdm.project.dto.OrdersWrapper;
+import wdm.project.dto.remote.Item;
 import wdm.project.exception.OrderException;
 import wdm.project.repository.OrdersItemsRepository;
 import wdm.project.repository.OrdersRepository;
 import wdm.project.service.clients.PaymentsServiceClient;
 import wdm.project.service.clients.StocksServiceClient;
-import wdm.project.service.clients.UsersServiceClient;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class OrdersService {
 
 	@Autowired
 	private StocksServiceClient stocksServiceClient;
-	@Autowired
-	private UsersServiceClient usersServiceClient;
 	@Autowired
 	private PaymentsServiceClient paymentsServiceClient;
     @Autowired
@@ -99,9 +98,13 @@ public class OrdersService {
 	    }
 
         ordersWrapper.setOrderItems(itemsInfo);
-        ordersWrapper.setPaymentStatus("SUCCESSFUL"); // TODO call the payment microservice for that
         ordersWrapper.setUserId(order.getUserId());
 
+        try {
+            ordersWrapper.setPaymentStatus(paymentsServiceClient.getPaymentStatus(orderId));
+        } catch (FeignException exception) {
+            throw new OrderException("Something went wrong while retrieving the payment status", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         return ordersWrapper;
     }
 
@@ -125,7 +128,13 @@ public class OrdersService {
 	    	throw new OrderException("There is no order with it \"" + orderId + "\"");
 	    }
 
-        //TODO: Items price could be stored here when we call the stock service so we dont have to call again
+	    // Check whether item exists.
+	    try {
+	        stocksServiceClient.getItem(itemId);
+        } catch (FeignException exception) {
+	        throw new OrderException(exception.contentUTF8(), HttpStatus.resolve(exception.status()));
+        }
+
         OrderItemId orderItemId = new OrderItemId(orderId, itemId);
         if (ordersItemsRepository.existsById(orderItemId)) {
             Optional<OrderItem> orderItemOptional = ordersItemsRepository.findById(orderItemId);
@@ -166,8 +175,17 @@ public class OrdersService {
      * successful transaction
      * FAILURE for a failed transaction.
      */
-    public String checkoutOrder(Long orderId){
-        // TODO: connect everything
-        return "FAILURE";
+    public void checkoutOrder(Long orderId) throws OrderException {
+        OrdersWrapper order = findOrder(orderId);
+        try {
+            Integer price = stocksServiceClient.subtractItem(order.getOrderItems());
+            paymentsServiceClient.payOrder(orderId, order.getUserId(), price);
+        } catch (FeignException exception) {
+            if (exception.status() == 400) {
+                throw new OrderException(new String(exception.content()), HttpStatus.BAD_REQUEST);
+            } else {
+                throw new OrderException("Something went wrong when handling the checkout", HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        }
     }
 }

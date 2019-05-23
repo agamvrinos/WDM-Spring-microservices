@@ -49,16 +49,16 @@ public class UsersEndpoint {
     @PostMapping("/credit/subtract/{id}/{amount}")
     public void subtractCredit(
             @PathVariable("id") Long id,
-            @PathVariable("amount") String amount
+            @PathVariable("amount") Integer amount
     ) throws UsersException {
-        usersService.subtractCredit(id, Integer.parseInt(amount));
+        usersService.subtractCredit(id, amount);
     }
 
     @PostMapping("/credit/add/{id}/{amount}")
     public void addCredit(
             @PathVariable("id") Long id,
-            @PathVariable("amount") String amount
+            @PathVariable("amount") Integer amount
     ) throws UsersException {
-        usersService.addCredit(id, Integer.parseInt(amount));
+        usersService.addCredit(id, amount);
     }
 }

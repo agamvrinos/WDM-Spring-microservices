@@ -43,7 +43,6 @@ public class OrdersEndpoint {
             @PathVariable("order_id") Long orderId,
             @PathVariable("item_id") Long itemId
     ) throws OrderException {
-        // TODO call stock service for item information and not @RequestBody
         ordersService.addItem(requestOrderItem, orderId, itemId);
     }
 
@@ -55,9 +54,8 @@ public class OrdersEndpoint {
         ordersService.removeItem(orderId, itemId);
     }
 
-    @PostMapping("/orders/checkout/{order_id}")
-    public String checkoutOrder(@PathVariable("order_id") Long orderId) {
-        // TODO call everything
-        return ordersService.checkoutOrder(orderId);
+    @PostMapping("/checkout/{order_id}")
+    public void checkoutOrder(@PathVariable("order_id") Long orderId) throws OrderException {
+        ordersService.checkoutOrder(orderId);
     }
 }
