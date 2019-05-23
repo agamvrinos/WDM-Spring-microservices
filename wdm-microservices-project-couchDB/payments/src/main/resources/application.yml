@@ -4,3 +4,9 @@ server:
 #  client:
 #    serviceUrl:
 #      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka}
+couchdb:
+  username: admin
+  password: admin
+  database: payments
+  host: localhost
+  port: 5984
