@@ -1,0 +1,26 @@
+- Create users database and use the endpoint http://localhost:8083/users/create/ with the following bodies:
+
+{
+	"name": "Panos",
+	"credit": 11378
+}
+
+{
+	"name": "Max",
+	"credit": 5338
+}
+
+{
+	"name": "Jannes",
+	"credit": 9504
+}
+
+{
+	"name": "Aggelos",
+	"credit": 849
+}
+
+{
+	"name": "Kyriakos",
+	"credit": 3200
+}

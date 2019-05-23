@@ -1,0 +1,9 @@
+- Create CouchDB payments. Payments in the database are in the format:
+
+{
+  "_id": "ff5d3c60d453322f135446afe3000a80",
+  "_rev": "15-625741badb51e5b6f91110a487b14fa9",
+  "orderId": "036d6079ebd4a3b2b54690b0910007e2",
+  "userId": "038d6179ead4a7b2b37900b0910007e2",
+  "status": "SUCCESS"
+}

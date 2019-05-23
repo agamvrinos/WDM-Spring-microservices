@@ -1,0 +1,79 @@
+- Create stock database and use the endpoint http://localhost:8082/stock/item/create/ with the following bodies:
+
+{
+	"title": "MacBook Pro 13",
+	"stock": 5,
+	"price": 129998999
+}
+
+{
+	"title": "Apple iPhone 8 Plus (64GB)",
+	"stock": 38,
+	"price": 593969971
+}
+
+{
+	"title": "Victesse Melville N7 HM 300 2019 Lage Instap",
+	"stock": 7,
+	"price": 1699
+}
+
+{
+	"title": "Converse All Star Chuck Taylor Ox White",
+	"stock": 200,
+	"price": 435
+}
+
+{
+	"title": "Continental EcoContact 6 205/55R16 91V",
+	"stock": 73,
+	"price": 664899979
+}
+
+{
+	"title": "Samsung 860 Evo 500GB",
+	"stock": 23,
+	"price": 736200027
+}
+
+{
+	"title": "Corsair Vengeance LPX 16GB DDR4-3200MHz",
+	"stock": 1,
+	"price": 912200012
+}
+
+{
+	"title": "Corsair TX-M Series TX650M",
+	"stock": 9,
+	"price": 844100037
+}
+
+{
+	"title": "Gigabyte Z370P D3",
+	"stock": 15,
+	"price": 907399979
+}
+
+{
+	"title": "Palit GeForce RTX 2060 6GB",
+	"stock": 19,
+	"price": 327820007
+}
+
+{
+	"title": "Intel Core i5-9600K",
+	"stock": 93,
+	"price": 255
+}
+
+{
+	"title": "Fractal Design Define R6",
+	"stock": 47,
+	"price": 142759995
+}
+
+{
+	"title": "Intel Core i7-9700K",
+	"stock": 58,
+	"price": 405
+}

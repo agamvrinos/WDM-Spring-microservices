@@ -1,0 +1,6 @@
+- Create database orders and use the endpoint http://localhost:8080/orders/create/<order_id> to create orders
+- Items can be added to orders via: http://localhost:8080/orders/addItem/<order_id>/<item_id> and specifying the amount in the request body, as follows:
+
+{
+	"amount": 11
+}
