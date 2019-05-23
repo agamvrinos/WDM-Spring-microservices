@@ -5,24 +5,19 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class ItemInfo {
 
 	@JsonProperty("itemId")
-	private Long id;
-
+	private String id;
 	@JsonProperty("amount")
 	private Integer amount;
 
 	public ItemInfo() {
+
 	}
 
-	public ItemInfo(Long itemId, Integer amount){
-		this.id = itemId;
-		this. amount = amount;
-	}
-
-	public Long getId() {
+	public String getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 
