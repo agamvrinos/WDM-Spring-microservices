@@ -1,7 +1,6 @@
 package wdm.project.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.ArrayList;
 import java.util.List;
 
 public class OrdersWrapper {
@@ -9,12 +8,12 @@ public class OrdersWrapper {
     @JsonProperty("status")
     private String paymentStatus;
     @JsonProperty("userId")
-    private Long userId;
+    private String userId;
     @JsonProperty("items")
     private List<ItemInfo> orderItems;
 
     public OrdersWrapper(){
-        this.orderItems = new ArrayList<>();
+
     }
 
     public String getPaymentStatus() {
@@ -25,11 +24,11 @@ public class OrdersWrapper {
         this.paymentStatus = paymentStatus;
     }
 
-    public Long getUserId() {
+    public String getUserId() {
         return userId;
     }
 
-    public void setUserId(Long userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
 
