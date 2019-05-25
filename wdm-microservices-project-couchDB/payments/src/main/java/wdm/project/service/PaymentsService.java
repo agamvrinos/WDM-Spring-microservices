@@ -10,21 +10,15 @@ import wdm.project.dto.Payment;
 import wdm.project.enums.Status;
 import wdm.project.exception.PaymentException;
 import wdm.project.repository.PaymentsRepository;
-import wdm.project.service.clients.PaymentsServiceClient;
-import wdm.project.service.clients.StocksServiceClient;
 import wdm.project.service.clients.UsersServiceClient;
 
 @Service
 public class PaymentsService {
 
     @Autowired
-    private StocksServiceClient stocksServiceClient;
-    @Autowired
     private UsersServiceClient usersServiceClient;
     @Autowired
-    private PaymentsServiceClient paymentsServiceClient;
-//    @Autowired
-//    private PaymentsRepository paymentsRepository;
+    private PaymentsRepository paymentsRepository;
 
     /**
      * Returns the payment instance that corresponds to the
@@ -37,19 +31,19 @@ public class PaymentsService {
      * "Pending" payment
      * @throws PaymentException when the provided order ID is null
      */
-    public Payment getPaymentByOrderId(Long orderId) throws PaymentException {
+    public Payment getPaymentByOrderId(String orderId) throws PaymentException {
         if (orderId == null) {
             throw new PaymentException("Order ID cannot be null", HttpStatus.BAD_REQUEST);
         }
-//        Payment payment;
-//        if (paymentsRepository.existsByOrderId(orderId)) {
-//            payment = paymentsRepository.findByOrderId(orderId);
-//        } else {
-//            payment = new Payment();
-//            payment.setOrderId(orderId);
-//            payment.setStatus(Status.PENDING.getValue());
-//        }
-//        return payment;
+        Payment payment;
+        if (!paymentsRepository.findByOrderId(orderId).isEmpty()) {
+            payment = paymentsRepository.findByOrderId(orderId).get(0);
+        } else {
+            payment = new Payment();
+            payment.setOrderId(orderId);
+            payment.setStatus(Status.PENDING.getValue());
+        }
+        return payment;
     }
 
     /**
@@ -63,25 +57,33 @@ public class PaymentsService {
      * @throws PaymentException when the communication with the Users
      * microservice has failed
      */
-    public Payment payOrder(Long orderId, Long userId, Integer totalPrice) throws PaymentException {
-//        Payment payment = new Payment();
-//        payment.setOrderId(orderId);
-//        payment.setUserId(userId);
-//
-//        String paymentStatus = Status.FAILURE.getValue();
-//        try {
-//            //TODO: Update communication
-//            RestTemplate re = new RestTemplate();
-//            JsonNode response = re.postForObject("http://localhost:8083/users/credit/subtract/" + userId + "/" + totalPrice, null, JsonNode.class);
-//            String responseStatus = response.get("status").asText();
-//            if (responseStatus != null) {
-//                paymentStatus = Status.findStatusEnum(responseStatus).getValue();
-//            }
-//        } catch (RestClientResponseException exception) {
-//            // TODO: Handle by checking other instances in case of timeout.
-//            throw new PaymentException("There was an exception while communicating with the Users microservice.", HttpStatus.INTERNAL_SERVER_ERROR);
-//        }
-//        payment.setStatus(paymentStatus);
-//        return paymentsRepository.save(payment);
+    public Payment payOrder(String orderId, String userId, Integer totalPrice) throws PaymentException {
+        Payment payment;
+        if (!paymentsRepository.findByOrderId(orderId).isEmpty()) {
+            payment = paymentsRepository.findByOrderId(orderId).get(0);
+        }
+        // If the payment does not exist, create a new one
+        else {
+            payment = new Payment();
+            payment.setOrderId(orderId);
+            payment.setUserId(userId);
+        }
+
+        String paymentStatus = Status.FAILURE.getValue();
+        try {
+            //TODO: Update communication
+            RestTemplate re = new RestTemplate();
+            JsonNode response = re.postForObject("http://localhost:8083/users/credit/subtract/" + userId + "/" + totalPrice, null, JsonNode.class);
+            String responseStatus = response.get("status").asText();
+            if (responseStatus != null) {
+                paymentStatus = Status.findStatusEnum(responseStatus).getValue();
+            }
+        } catch (RestClientResponseException exception) {
+            // TODO: Handle by checking other instances in case of timeout.
+            throw new PaymentException("There was an exception while communicating with the Users microservice.", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        payment.setStatus(paymentStatus);
+        paymentsRepository.add(payment);
+        return payment;
     }
 }

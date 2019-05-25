@@ -28,8 +28,8 @@ public interface UsersServiceClient {
 	Integer getUserCredit(@PathVariable("id") Long id);
 
 	@PostMapping("/users/credit/subtract/{id}/{amount}")
-	void subtractCredit(@PathVariable("id") Long id, @PathVariable("amount") String amount);
+	void subtractCredit(@PathVariable("id") Long id, @PathVariable("amount") Integer amount);
 
 	@PostMapping("/users/credit/add/{id}/{amount}")
-	void addCredit(@PathVariable("id") Long id, @PathVariable("amount") String amount);
+    void addCredit(@PathVariable("id") Long id, @PathVariable("amount") Integer amount);
 }

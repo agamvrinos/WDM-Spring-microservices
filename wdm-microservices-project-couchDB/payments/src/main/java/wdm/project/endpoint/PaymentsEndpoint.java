@@ -20,15 +20,15 @@ public class PaymentsEndpoint {
     private PaymentsService paymentsService;
 
     @GetMapping("/status/{order_id}")
-    public String getPaymentStatus(@PathVariable("order_id") Long orderId) throws PaymentException {
+    public String getPaymentStatus(@PathVariable("order_id") String orderId) throws PaymentException {
         Payment payment = paymentsService.getPaymentByOrderId(orderId);
         return payment.getStatus();
     }
 
     @PostMapping("/pay/{order_id}/{user_id}/{total}")
     public void payOrder(
-            @PathVariable("order_id") Long orderId,
-            @PathVariable("user_id") Long userId,
+            @PathVariable("order_id") String orderId,
+            @PathVariable("user_id") String userId,
             @PathVariable("total") Integer total
     ) throws PaymentException {
         if (userId == null || total == null) {

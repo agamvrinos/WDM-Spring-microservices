@@ -19,30 +19,30 @@ public class StocksEndpoint {
     private StocksService stocksService;
 
 	@GetMapping("/item/{id}")
-    public Item getItem(@PathVariable("id") Long itemId) throws StockException {
+    public Item getItem(@PathVariable("id") String itemId) throws StockException {
         return stocksService.getItem(itemId);
     }
 
     @GetMapping("/availability/{id}")
-    public Integer getItemAvailability(@PathVariable("id") Long itemId) throws StockException{
+    public Integer getItemAvailability(@PathVariable("id") String itemId) throws StockException{
         return stocksService.getItemAvailability(itemId);
     }
 
     @PostMapping("/item/create/")
-    public Long createItem(@RequestBody Item requestItem) {
+    public String createItem(@RequestBody Item requestItem) {
         Item item = stocksService.createItem(requestItem);
         return item.getId();
     }
 
     @PostMapping("/add/{item_id}/{number}")
-    public void addItem(@PathVariable("item_id") Long itemId,
+    public void addItem(@PathVariable("item_id") String itemId,
                         @PathVariable("number") Integer itemNumber
     ) throws StockException {
         stocksService.addItem(itemId, itemNumber);
     }
 
     @PostMapping("/subtract/{item_id}/{number}")
-    public void subtractItem(@PathVariable("item_id") Long itemId,
+    public void subtractItem(@PathVariable("item_id") String itemId,
                              @PathVariable("number") Integer itemNumber
     ) throws StockException {
         stocksService.subtractItem(itemId, itemNumber);

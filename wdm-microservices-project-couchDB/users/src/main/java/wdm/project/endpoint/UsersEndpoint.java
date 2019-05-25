@@ -21,44 +21,44 @@ public class UsersEndpoint {
     private UsersService usersService;
 
     @PostMapping("/create")
-    public Long createUser(@RequestBody User requestUser) {
+    public String createUser(@RequestBody User requestUser) {
         User user = usersService.createUser(requestUser);
         return user.getId();
     }
 
     @DeleteMapping("/remove/{id}")
-    public void removeUser(@PathVariable("id") Long id) throws UsersException {
+    public void removeUser(@PathVariable("id") String id) throws UsersException {
         usersService.removeUser(id);
     }
 
     @PutMapping("/update/{id}")
-    public void updateUser(@PathVariable("id") Long id, @RequestBody User user) throws UsersException {
+    public void updateUser(@PathVariable("id") String id, @RequestBody User user) throws UsersException {
         usersService.updateUser(id, user);
     }
 
     @GetMapping("/find/{id}")
-    public User findUser(@PathVariable("id") Long id) throws UsersException {
-		return usersService.findUser(id);
+    public User findUser(@PathVariable("id") String id) throws UsersException {
+        return usersService.findUser(id);
     }
 
     @GetMapping("/credit/{id}")
-    public Integer getUserCredit(@PathVariable("id") Long id) throws UsersException {
+    public Integer getUserCredit(@PathVariable("id") String id) throws UsersException {
         return usersService.getUserCredit(id);
     }
 
     @PostMapping("/credit/subtract/{id}/{amount}")
     public void subtractCredit(
-            @PathVariable("id") Long id,
-            @PathVariable("amount") String amount
+            @PathVariable("id") String id,
+            @PathVariable("amount") Integer amount
     ) throws UsersException {
-        usersService.subtractCredit(id, Integer.parseInt(amount));
+        usersService.subtractCredit(id, amount);
     }
 
     @PostMapping("/credit/add/{id}/{amount}")
     public void addCredit(
-            @PathVariable("id") Long id,
-            @PathVariable("amount") String amount
+            @PathVariable("id") String id,
+            @PathVariable("amount") Integer amount
     ) throws UsersException {
-        usersService.addCredit(id, Integer.parseInt(amount));
+        usersService.addCredit(id, amount);
     }
 }

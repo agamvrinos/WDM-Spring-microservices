@@ -3,5 +3,4 @@ spring:
     name: eureka-service
   cloud:
     config:
-      # this should be read dynamically (maybe ENV variable later)
       uri: ${CONFIG_URI:http://localhost:8888}

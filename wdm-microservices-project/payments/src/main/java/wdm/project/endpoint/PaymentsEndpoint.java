@@ -31,7 +31,7 @@ public class PaymentsEndpoint {
             @PathVariable("user_id") Long userId,
             @PathVariable("total") Integer total
     ) throws PaymentException {
-        if (userId == null || total == null) {
+        if (orderId == null || userId == null || total == null) {
             throw new PaymentException("Params were not provided", HttpStatus.BAD_REQUEST);
         }
         Payment payment = paymentsService.payOrder(orderId, userId, total);

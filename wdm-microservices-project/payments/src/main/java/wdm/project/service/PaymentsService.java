@@ -1,28 +1,20 @@
 package wdm.project.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import feign.FeignException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClientResponseException;
-import org.springframework.web.client.RestTemplate;
 import wdm.project.dto.Payment;
 import wdm.project.enums.Status;
 import wdm.project.exception.PaymentException;
 import wdm.project.repository.PaymentsRepository;
-import wdm.project.service.clients.PaymentsServiceClient;
-import wdm.project.service.clients.StocksServiceClient;
 import wdm.project.service.clients.UsersServiceClient;
 
 @Service
 public class PaymentsService {
 
     @Autowired
-    private StocksServiceClient stocksServiceClient;
-    @Autowired
     private UsersServiceClient usersServiceClient;
-    @Autowired
-    private PaymentsServiceClient paymentsServiceClient;
     @Autowired
     private PaymentsRepository paymentsRepository;
 
@@ -64,24 +56,25 @@ public class PaymentsService {
      * microservice has failed
      */
     public Payment payOrder(Long orderId, Long userId, Integer totalPrice) throws PaymentException {
-        Payment payment = new Payment();
-        payment.setOrderId(orderId);
-        payment.setUserId(userId);
-
-        String paymentStatus = Status.FAILURE.getValue();
-        try {
-            //TODO: Update communication
-            RestTemplate re = new RestTemplate();
-            JsonNode response = re.postForObject("http://localhost:8083/users/credit/subtract/" + userId + "/" + totalPrice, null, JsonNode.class);
-            String responseStatus = response.get("status").asText();
-            if (responseStatus != null) {
-                paymentStatus = Status.findStatusEnum(responseStatus).getValue();
-            }
-        } catch (RestClientResponseException exception) {
-            // TODO: Handle by checking other instances in case of timeout.
-            throw new PaymentException("There was an exception while communicating with the Users microservice.", HttpStatus.INTERNAL_SERVER_ERROR);
+        Payment payment;
+        if (paymentsRepository.existsById(orderId)) {
+            payment = paymentsRepository.getOne(orderId);
+        } else {
+            payment = new Payment();
+            payment.setOrderId(orderId);
+            payment.setUserId(userId);
         }
-        payment.setStatus(paymentStatus);
+
+        try {
+            usersServiceClient.subtractCredit(orderId, totalPrice);
+            payment.setStatus("SUCCESS");
+        } catch (FeignException exception) {
+            if (exception.status() == 400) {
+                payment.setStatus("FAILURE");
+            } else {
+                throw new PaymentException("Something went wrong while processing the request", HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        }
         return paymentsRepository.save(payment);
     }
 }
