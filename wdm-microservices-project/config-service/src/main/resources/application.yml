@@ -9,7 +9,7 @@ spring:
           # the branch where the config files are located (master if not set) [did not work]
           default-label: configuration-files
           # the relative path in github repo where the config files are located
-#          search-paths: services-config
+          search-paths: postgres
           ignore-local-ssh-settings: true
           private-key: |
             -----BEGIN RSA PRIVATE KEY-----
