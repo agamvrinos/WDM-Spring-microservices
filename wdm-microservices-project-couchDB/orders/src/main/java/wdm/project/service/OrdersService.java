@@ -9,16 +9,16 @@ import wdm.project.dto.Order;
 import wdm.project.dto.OrdersWrapper;
 import wdm.project.exception.OrderException;
 import wdm.project.repository.OrderRepository;
+import wdm.project.service.clients.PaymentsServiceClient;
+import wdm.project.service.clients.StocksServiceClient;
 
 @Service
 public class OrdersService {
 
-//	@Autowired
-//	private StocksServiceClient stocksServiceClient;
-//	@Autowired
-//	private UsersServiceClient usersServiceClient;
-//	@Autowired
-//	private PaymentsServiceClient paymentsServiceClient;
+	@Autowired
+	private StocksServiceClient stocksServiceClient;
+	@Autowired
+	private PaymentsServiceClient paymentsServiceClient;
     @Autowired
     private OrderRepository ordersRepository;
 

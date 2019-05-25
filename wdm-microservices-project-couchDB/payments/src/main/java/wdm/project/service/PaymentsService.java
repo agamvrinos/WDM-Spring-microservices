@@ -10,10 +10,13 @@ import wdm.project.dto.Payment;
 import wdm.project.enums.Status;
 import wdm.project.exception.PaymentException;
 import wdm.project.repository.PaymentsRepository;
+import wdm.project.service.clients.UsersServiceClient;
 
 @Service
 public class PaymentsService {
 
+    @Autowired
+    private UsersServiceClient usersServiceClient;
     @Autowired
     private PaymentsRepository paymentsRepository;
 
