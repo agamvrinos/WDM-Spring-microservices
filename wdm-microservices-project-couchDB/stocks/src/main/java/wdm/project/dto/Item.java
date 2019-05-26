@@ -57,7 +57,7 @@ public class Item extends CouchDbDocument {
 	@Override
 	public String toString() {
 		return "Item{" +
-				"id=" + super.getId() +
+				"id=" + id +
 				"title='" + title + '\'' +
 				", stock=" + stock +
 				", price=" + price +

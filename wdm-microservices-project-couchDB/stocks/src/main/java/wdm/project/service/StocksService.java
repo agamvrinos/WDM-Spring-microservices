@@ -1,11 +1,17 @@
 package wdm.project.service;
 
+import org.ektorp.DocumentOperationResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import wdm.project.dto.Item;
+import wdm.project.dto.remote.ItemInfo;
 import wdm.project.exception.StockException;
 import wdm.project.repository.StocksRepository;
+
+import java.util.Collection;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class StocksService {
@@ -93,5 +99,29 @@ public class StocksService {
         }
         item.setStock(currentStock - subtractedStock);
         stocksRepository.update(item);
+    }
+
+    /**
+     * Subtracts stock from the Item instance with the provided id.
+     *
+     * @param itemInfos item informations for all items which have to be subtracted.
+     * @return the total price of all subtracted items
+     * @throws StockException when the item with the provided ID is not
+     * found or the stock is insufficient.
+     */
+    public Integer subtractItems(List<ItemInfo> itemInfos) throws StockException {
+        int totalPrice = 0;
+        for(ItemInfo itemInfo: itemInfos) {
+            Item item = getItem(itemInfo.getId());
+            Integer currentStock = item.getStock();
+            if (itemInfo.getAmount() > currentStock) {
+                throw new StockException("The stock of item ID " + itemInfo.getId() + " is " + currentStock +
+                        " and can therefore not be reduced by " + itemInfo.getAmount() + ".", HttpStatus.BAD_REQUEST);
+            }
+            item.setStock(currentStock - itemInfo.getAmount());
+            totalPrice += itemInfo.getAmount() * item.getPrice();
+            stocksRepository.update(item);
+        }
+        return totalPrice;
     }
 }
