@@ -1,0 +1,17 @@
+server:
+  port: 8082
+spring:
+  datasource:
+    url: ${DB_URI}/Stock
+    username: wdm
+    password: wdm-2019
+  jpa:
+    properties:
+      hibernate:
+        temp:
+          use_jdbc_metadata_defaults: false
+    database-platform: org.hibernate.dialect.PostgreSQL9Dialect
+eureka:
+  client:
+    serviceUrl:
+        defaultZone: ${EUREKA_URI}
