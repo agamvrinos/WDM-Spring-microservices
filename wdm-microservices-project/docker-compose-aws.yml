@@ -1,5 +1,4 @@
-# this compose file is for local deployment only,
-# where a postgres instance is already created and running
+# for local deployment with a test postgres instance on AWS
 # NOTE: using host.docker.internal to resolve localhost ip apparently only works on Mac/Windows Docker
 
 version: "3.7"
@@ -22,37 +21,37 @@ services:
     ports:
       - "8080:8080"
     environment:
-        PROFILE: "local"
+        PROFILE: "aws"
         CONFIG_URI: "http://config-service:8888"
         EUREKA_URI: "http://eureka-service:8761/eureka"
-        DB_URI: "jdbc:postgresql://host.docker.internal:5432"
+        DB_URI: "jdbc:postgresql://wdm-test.chan3zsfx6kz.us-east-1.rds.amazonaws.com:5432"
 
   payments-service:
     image: wdm/payments
     ports:
       - "8081:8081"
     environment:
-        PROFILE: "local"
+        PROFILE: "aws"
         CONFIG_URI: "http://config-service:8888"
         EUREKA_URI: "http://eureka-service:8761/eureka"
-        DB_URI: "jdbc:postgresql://host.docker.internal:5432"
+        DB_URI: "jdbc:postgresql://wdm-test.chan3zsfx6kz.us-east-1.rds.amazonaws.com:5432"
 
   stocks-service:
     image: wdm/stocks
     ports:
       - "8082:8082"
     environment:
-        PROFILE: "local"
+        PROFILE: "aws"
         CONFIG_URI: "http://config-service:8888"
         EUREKA_URI: "http://eureka-service:8761/eureka"
-        DB_URI: "jdbc:postgresql://host.docker.internal:5432"
+        DB_URI: "jdbc:postgresql://wdm-test.chan3zsfx6kz.us-east-1.rds.amazonaws.com:5432"
 
   users-service:
     image: wdm/users
     ports:
       - "8083:8083"
     environment:
-        PROFILE: "local"
+        PROFILE: "aws"
         CONFIG_URI: "http://config-service:8888"
         EUREKA_URI: "http://eureka-service:8761/eureka"
-        DB_URI: "jdbc:postgresql://host.docker.internal:5432"
+        DB_URI: "jdbc:postgresql://wdm-test.chan3zsfx6kz.us-east-1.rds.amazonaws.com:5432"
