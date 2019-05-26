@@ -1,6 +1,5 @@
 package wdm.project.service;
 
-import org.ektorp.DocumentOperationResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -9,8 +8,6 @@ import wdm.project.dto.remote.ItemInfo;
 import wdm.project.exception.StockException;
 import wdm.project.repository.StocksRepository;
 
-import java.util.Collection;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
