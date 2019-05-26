@@ -56,7 +56,7 @@
 		</dependency>
 	</dependencies>
 
-	 Spring Cloud dependencies
+<!--	 Spring Cloud dependencies-->
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
