@@ -1,21 +1,6 @@
-<<<<<<< HEAD
 spring:
   application:
     name: users-service
   cloud:
     config:
-      # this should be read dynamically (maybe ENV variable later)
-      uri: ${CONFIG_URI:http://localhost}:8888
-||||||| merged common ancestors
-spring:
-  application:
-    name: users-service
-=======
-spring:
-  application:
-    name: users-service
-  cloud:
-    config:
-      # this should be read dynamically (maybe ENV variable later)
-      uri: http://localhost:8888
->>>>>>> master
+      uri: ${CONFIG_URI:http://localhost:8888}

@@ -3,4 +3,4 @@ spring:
     name: stocks-service
   cloud:
     config:
-      uri: ${CONFIG_URI:http://localhost}:8888
+      uri: ${CONFIG_URI:http://localhost:8888}
