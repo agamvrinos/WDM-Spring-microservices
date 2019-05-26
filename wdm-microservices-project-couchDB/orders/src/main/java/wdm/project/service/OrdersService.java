@@ -168,8 +168,7 @@ public class OrdersService {
             paymentsServiceClient.payOrder(orderId, order.getUserId(), price);
         } catch (FeignException exception) {
             if (exception.status() == 400) {
-//                throw new OrderException(new String(exception.content()), HttpStatus.BAD_REQUEST);
-                throw new OrderException("Exception 400");
+                throw new OrderException("One of the item IDs was not found", HttpStatus.NOT_FOUND);
             } else {
                 throw new OrderException("Something went wrong when handling the checkout", HttpStatus.INTERNAL_SERVER_ERROR);
             }
@@ -192,7 +191,6 @@ public class OrdersService {
              stocksServiceClient.getItem(itemId);
          } catch (FeignException exception) {
              throw new OrderException("There is no item with id \"" + itemId + "\"");
-//             throw new OrderException(exception.contentUTF8(), HttpStatus.resolve(exception.status()));
          }
     }
 }
