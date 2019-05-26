@@ -2,7 +2,8 @@
 .idea
 wdm-microservices-project-couchDB/.idea
 
-# *iml
+*.iml
+
 # Postgres
 wdm-microservices-project/users/users.iml
 wdm-microservices-project/orders/orders.iml
@@ -20,6 +21,7 @@ wdm-microservices-project-couchDB/eureka/eureka.iml
 wdm-microservices-project-couchDB/WDM.iml
 
 # /target folders
+**/target/
 # Postgres
 wdm-microservices-project/users/target
 wdm-microservices-project/orders/target
@@ -27,12 +29,14 @@ wdm-microservices-project/payments/target
 wdm-microservices-project/stocks/target
 wdm-microservices-project/eureka/target
 wdm-microservices-project/config-service/target
+wdm-microservices-project/gateway/target
 # CouchDB
 wdm-microservices-project-couchDB/users/target
 wdm-microservices-project-couchDB/orders/target
 wdm-microservices-project-couchDB/payments/target
 wdm-microservices-project-couchDB/stocks/target
 wdm-microservices-project-couchDB/eureka/target
+wdm-microservices-project-couchDB/gateway/target
 
 # Compiled class file
 *.class
