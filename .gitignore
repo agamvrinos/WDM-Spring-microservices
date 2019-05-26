@@ -37,6 +37,7 @@ wdm-microservices-project-couchDB/payments/target
 wdm-microservices-project-couchDB/stocks/target
 wdm-microservices-project-couchDB/eureka/target
 wdm-microservices-project-couchDB/gateway/target
+wdm-microservices-project-couchDB/config-service/target
 
 # Compiled class file
 *.class
