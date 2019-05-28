@@ -1,0 +1,21 @@
+server:
+  port: 8086
+zuul:
+  prefix: /api
+  routes:
+    users:
+      path: /users/**
+      serviceId: users-service
+    orders:
+      path: /orders/**
+      serviceId: orders-service
+    payments:
+      path: /payments/**
+      serviceId: payments-service
+    stock:
+      path: /stock/**
+      serviceId: stocks-service
+eureka:
+  client:
+    serviceUrl:
+        defaultZone: ${EUREKA_URI:http://localhost:8761/eureka}
