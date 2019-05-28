@@ -3,5 +3,4 @@ spring:
     name: stocks-service
   cloud:
     config:
-      # this should be read dynamically (maybe ENV variable later)
-      uri: http://localhost:8888
+      uri: ${CONFIG_URI:http://localhost:8888}
