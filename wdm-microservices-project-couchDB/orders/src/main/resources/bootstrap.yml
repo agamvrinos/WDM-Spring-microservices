@@ -1,3 +1,6 @@
 spring:
   application:
     name: orders-service
+  cloud:
+    config:
+      uri: ${CONFIG_URI:http://localhost:8888}
