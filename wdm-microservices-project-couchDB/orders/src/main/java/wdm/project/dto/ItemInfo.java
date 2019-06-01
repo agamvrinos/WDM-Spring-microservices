@@ -11,7 +11,6 @@ public class ItemInfo {
 	private Integer amount;
 
 	public ItemInfo() {
-
 	}
 
 	public String getId() {

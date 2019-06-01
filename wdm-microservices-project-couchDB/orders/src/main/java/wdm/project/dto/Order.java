@@ -7,7 +7,7 @@ import java.util.List;
 
 public class Order extends CouchDbDocument {
 
-    @JsonProperty("user_id")
+    @JsonProperty("userId")
     private String userId;
     @JsonProperty("total")
     private Integer total;
@@ -42,7 +42,7 @@ public class Order extends CouchDbDocument {
     public String toString() {
         return "Order{" +
                 "id=" + super.getId() +
-                ", user_id='" + this.userId + '\'' +
+                ", userId='" + this.userId + '\'' +
                 ", total=" + this.total +
                 '}';
     }

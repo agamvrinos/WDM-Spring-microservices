@@ -6,10 +6,6 @@ import org.ektorp.support.TypeDiscriminator;
 
 public class Item extends CouchDbDocument {
 
-	@TypeDiscriminator
-	@JsonProperty("_id")
-	private String id;
-
 	@JsonProperty("title")
 	private String title;
 
@@ -20,14 +16,6 @@ public class Item extends CouchDbDocument {
 	private Integer price;
 
 	public Item() {
-	}
-
-	public String getId() {
-		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
 	}
 
 	public String getTitle() {

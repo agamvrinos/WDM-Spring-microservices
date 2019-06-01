@@ -46,7 +46,6 @@ public class OrdersEndpoint {
             @PathVariable("order_id") String orderId,
             @PathVariable("item_id") String itemId
     ) throws OrderException {
-        // TODO call stock service for item information and not @RequestBody
         ordersService.addItem(requestOrderItem, orderId, itemId);
     }
 
@@ -58,10 +57,8 @@ public class OrdersEndpoint {
         ordersService.removeItem(orderId, itemId);
     }
 
-    @PostMapping("/orders/checkout/{order_id}")
-    public JsonNode checkoutOrder(@PathVariable("order_id") String orderId) {
-        // TODO call everything
-        String status = ordersService.checkoutOrder(orderId);
-        return objectMapper.createObjectNode().put("status", status);
+    @PostMapping("/checkout/{order_id}")
+    public void checkoutOrder(@PathVariable("order_id") String orderId) throws OrderException {
+        ordersService.checkoutOrder(orderId);
     }
 }
