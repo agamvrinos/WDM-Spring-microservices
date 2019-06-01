@@ -26,5 +26,5 @@ public interface StocksServiceClient {
 	void addItem(@PathVariable("item_id") Long itemId, @PathVariable("number") Integer itemNumber);
 
 	@PostMapping("/stock/subtract")
-	Integer subtractItem(@RequestBody List<ItemInfo> itemInfos);
+	Integer subtractItems(@RequestBody List<ItemInfo> itemInfos);
 }

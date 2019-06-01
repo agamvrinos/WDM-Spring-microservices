@@ -178,7 +178,7 @@ public class OrdersService {
     public void checkoutOrder(Long orderId) throws OrderException {
         OrdersWrapper order = findOrder(orderId);
         try {
-            Integer price = stocksServiceClient.subtractItem(order.getOrderItems());
+            Integer price = stocksServiceClient.subtractItems(order.getOrderItems());
             paymentsServiceClient.payOrder(orderId, order.getUserId(), price);
         } catch (FeignException exception) {
             if (exception.status() == 400) {
