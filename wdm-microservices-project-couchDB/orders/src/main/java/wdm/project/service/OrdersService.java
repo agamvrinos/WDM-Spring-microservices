@@ -100,6 +100,13 @@ public class OrdersService {
 
         checkItems(orderId, itemId);
 
+        // Check whether item exists.
+        try {
+            stocksServiceClient.getItem(itemId);
+        } catch (FeignException exception) {
+            throw new OrderException("There is no item with id \"" + itemId + "\"");
+        }
+
 	    Order storedOrder = ordersRepository.get(orderId);
 	    List<ItemInfo> storedItems =  storedOrder.getOrderItems();
 
@@ -186,11 +193,5 @@ public class OrdersService {
         if (!existsOrder) {
             throw new OrderException("There is no order with it \"" + orderId + "\"");
         }
-         // Check whether item exists.
-         try {
-             stocksServiceClient.getItem(itemId);
-         } catch (FeignException exception) {
-             throw new OrderException("There is no item with id \"" + itemId + "\"");
-         }
     }
 }
