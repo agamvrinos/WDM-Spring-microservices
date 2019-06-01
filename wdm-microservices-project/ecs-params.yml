@@ -1,0 +1,18 @@
+# modify the subnets and security groups to point to the correct ECS cluster subnets
+# and the correct security group
+version: 1
+task_definition:
+  task_execution_role: ecsTaskExecutionRole
+  ecs_network_mode: awsvpc
+  task_size:
+    mem_limit: 0.5GB
+    cpu_limit: 256
+run_params:
+  network_configuration:
+    awsvpc_configuration:
+      subnets:
+        - "subnet-0edb0d765fbf84b32"
+        - "subnet-06ac55ed4bad0c8cd"
+      security_groups:
+        - "sg-05e0a2b134b96b54e"
+      assign_public_ip: ENABLED
