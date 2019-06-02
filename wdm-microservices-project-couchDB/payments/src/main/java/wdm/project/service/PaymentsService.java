@@ -68,7 +68,7 @@ public class PaymentsService {
         }
 
         try {
-            usersServiceClient.subtractCredit(userId, totalPrice);
+            usersServiceClient.subtractCredit(userId, orderId, totalPrice);
             payment.setStatus("SUCCESS");
         } catch (FeignException exception) {
             if (exception.status() == 400) {
@@ -77,7 +77,14 @@ public class PaymentsService {
                 throw new PaymentException("Something went wrong while processing the request", HttpStatus.INTERNAL_SERVER_ERROR);
             }
         }
-        paymentsRepository.add(payment);
+        // Update already existing payment document
+        if (paymentsRepository.contains(orderId)) {
+            paymentsRepository.update(payment);
+        }
+        // If it does not exist, create a new one
+        else {
+            paymentsRepository.add(payment);
+        }
         return payment;
     }
 }
