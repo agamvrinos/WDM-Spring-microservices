@@ -7,9 +7,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import wdm.project.dto.ItemInfo;
+import wdm.project.dto.JournalEntry;
 import wdm.project.dto.Order;
 import wdm.project.dto.OrdersWrapper;
+import wdm.project.enums.Event;
+import wdm.project.enums.Status;
 import wdm.project.exception.OrderException;
+import wdm.project.repository.JournalRepository;
 import wdm.project.repository.OrderRepository;
 import wdm.project.service.clients.PaymentsServiceClient;
 import wdm.project.service.clients.StocksServiceClient;
@@ -23,6 +27,8 @@ public class OrdersService {
 	private PaymentsServiceClient paymentsServiceClient;
     @Autowired
     private OrderRepository ordersRepository;
+    @Autowired
+    private JournalRepository journalRepository;
 
     /**
      * Initializes an order in the micro-service's database with zero
@@ -170,16 +176,67 @@ public class OrdersService {
      */
     public void  checkoutOrder(String orderId) throws OrderException {
         OrdersWrapper order = findOrder(orderId);
-        try {
-            Integer price = stocksServiceClient.subtractItems(order.getOrderItems());
-            paymentsServiceClient.payOrder(orderId, order.getUserId(), price);
-        } catch (FeignException exception) {
-            if (exception.status() == 400) {
-                throw new OrderException("One of the item IDs was not found", HttpStatus.NOT_FOUND);
-            } else {
-                throw new OrderException("Something went wrong when handling the checkout", HttpStatus.INTERNAL_SERVER_ERROR);
+        JournalEntry checkoutEntry;
+        String id = orderId + "-" + Event.CHECKOUT;
+        if (journalRepository.contains(id)) {
+            checkoutEntry = journalRepository.get(id);
+        } else {
+            checkoutEntry = new JournalEntry(id, Status.STOCK_PENDING, -1);
+        }
+        checkoutOrder(orderId, checkoutEntry, order);
+    }
+
+    private void checkoutOrder(String orderId, JournalEntry checkoutEntry, OrdersWrapper order) throws OrderException {
+        switch (Status.findStatusEnum(checkoutEntry.getStatus())) {
+            case SUCCESS: return;
+            case STOCK_FAILURE: throw new OrderException("The stock was not sufficient to check out order with order ID " + orderId, HttpStatus.BAD_REQUEST);
+            case PAYMENT_FAILURE: throw new OrderException("The credit of user " + order.getUserId() + " was not sufficient to pay " + checkoutEntry.getPrice(), HttpStatus.BAD_REQUEST);
+            case STOCK_PENDING: {
+                try {
+                    Integer price = stocksServiceClient.subtractItems(orderId, order.getOrderItems());
+                    checkoutEntry.setPrice(price);
+                    checkoutEntry.setStatus(Status.STOCK_SUCCESS);
+                } catch (FeignException exception) {
+                    if (exception.status() == 400) {
+                        checkoutEntry.setStatus(Status.STOCK_FAILURE);
+                    } else {
+                        throw new OrderException("Something went wrong when subtracting the item stock.");
+                    }
+                }
+                break;
+            }
+            case STOCK_SUCCESS: {
+                try {
+                    paymentsServiceClient.payOrder(orderId, order.getUserId(), checkoutEntry.getPrice());
+                    checkoutEntry.setStatus(Status.SUCCESS);
+                } catch (FeignException exception) {
+                    if (exception.status() == 400) {
+                        checkoutEntry.setStatus(Status.ROLLBACK_PENDING);
+                    } else {
+                        throw new OrderException("Something went wrong when attempting to reduce the credit.");
+                    }
+                }
+                break;
+            }
+            case ROLLBACK_PENDING: {
+                try {
+                    stocksServiceClient.addItems(orderId, order.getOrderItems());
+                    checkoutEntry.setStatus(Status.PAYMENT_FAILURE);
+                } catch (FeignException exception) {
+                    throw new OrderException("Something went wrong when attempting the rollback on the stock.");
+                }
             }
         }
+        // TODO: check if it works
+        // Update already existing checkout entry document
+        if (journalRepository.contains(checkoutEntry.getId())) {
+            journalRepository.update(checkoutEntry);
+        }
+        // If it does not exist, create a new one
+        else {
+            journalRepository.add(checkoutEntry);
+        }
+        checkoutOrder(orderId, checkoutEntry, order);
     }
 
     private void checkItems(String orderId, String itemId)throws OrderException{
