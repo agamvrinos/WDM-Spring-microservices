@@ -46,12 +46,13 @@ public class UsersEndpoint {
         return usersService.getUserCredit(id);
     }
 
-    @PostMapping("/credit/subtract/{id}/{amount}")
+    @PostMapping("/credit/subtract/{id}/{transaction_id}/{amount}")
     public void subtractCredit(
             @PathVariable("id") String id,
+            @PathVariable("transaction_id") String transactionId,
             @PathVariable("amount") Integer amount
     ) throws UsersException {
-        usersService.subtractCredit(id, amount);
+        usersService.subtractCredit(id, transactionId, amount);
     }
 
     @PostMapping("/credit/add/{id}/{amount}")

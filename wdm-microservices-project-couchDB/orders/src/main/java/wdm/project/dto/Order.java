@@ -7,15 +7,29 @@ import java.util.List;
 
 public class Order extends CouchDbDocument {
 
+    @JsonProperty("type")
+    private String type;
+
     @JsonProperty("userId")
     private String userId;
+
     @JsonProperty("total")
     private Integer total;
+
     @JsonProperty("items")
     private List<ItemInfo> orderItems;
 
     public Order() {
+        this.type = "object";
         this.orderItems = new ArrayList<>();
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
     public String getUserId() {
@@ -42,6 +56,7 @@ public class Order extends CouchDbDocument {
     public String toString() {
         return "Order{" +
                 "id=" + super.getId() +
+                ", type='" + type + '\'' +
                 ", userId='" + this.userId + '\'' +
                 ", total=" + this.total +
                 '}';

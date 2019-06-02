@@ -17,9 +17,4 @@ public class PaymentsRepository extends CouchDbRepositorySupport<Payment> {
 		super(Payment.class, db);
 		initStandardDesignDocument();
 	}
-
-	@GenerateView
-	public List<Payment> findByOrderId(String orderId) {
-		return queryView("by_orderId", orderId);
-	}
 }

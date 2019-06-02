@@ -27,8 +27,8 @@ public interface UsersServiceClient {
 	@GetMapping("/users/credit/{id}")
 	Integer getUserCredit(@PathVariable("id") String id);
 
-	@PostMapping("/users/credit/subtract/{id}/{amount}")
-	void subtractCredit(@PathVariable("id") String id, @PathVariable("amount") Integer amount);
+	@PostMapping("/users/credit/subtract/{id}/{transaction_id}/{amount}")
+	void subtractCredit(@PathVariable("id") String id, @PathVariable("transaction_id") String transactionId, @PathVariable("amount") Integer amount);
 
 	@PostMapping("/users/credit/add/{id}/{amount}")
 	void addCredit(@PathVariable("id") String id, @PathVariable("amount") Integer amount);

@@ -34,11 +34,11 @@ public class PaymentsService {
             throw new PaymentException("Order ID cannot be null", HttpStatus.BAD_REQUEST);
         }
         Payment payment;
-        if (!paymentsRepository.findByOrderId(orderId).isEmpty()) {
-            payment = paymentsRepository.findByOrderId(orderId).get(0);
+        if (paymentsRepository.contains(orderId)) {
+            payment = paymentsRepository.get(orderId);
         } else {
             payment = new Payment();
-            payment.setOrderId(orderId);
+            payment.setId(orderId);
             payment.setStatus(Status.PENDING.getValue());
         }
         return payment;
@@ -57,18 +57,18 @@ public class PaymentsService {
      */
     public Payment payOrder(String orderId, String userId, Integer totalPrice) throws PaymentException {
         Payment payment;
-        if (!paymentsRepository.findByOrderId(orderId).isEmpty()) {
-            payment = paymentsRepository.findByOrderId(orderId).get(0);
+        if (paymentsRepository.contains(orderId)) {
+            payment = paymentsRepository.get(orderId);
         }
         // If the payment does not exist, create a new one
         else {
             payment = new Payment();
-            payment.setOrderId(orderId);
+            payment.setId(orderId);
             payment.setUserId(userId);
         }
 
         try {
-            usersServiceClient.subtractCredit(userId, totalPrice);
+            usersServiceClient.subtractCredit(userId, orderId, totalPrice);
             payment.setStatus("SUCCESS");
         } catch (FeignException exception) {
             if (exception.status() == 400) {
@@ -77,7 +77,14 @@ public class PaymentsService {
                 throw new PaymentException("Something went wrong while processing the request", HttpStatus.INTERNAL_SERVER_ERROR);
             }
         }
-        paymentsRepository.add(payment);
+        // Update already existing payment document
+        if (paymentsRepository.contains(orderId)) {
+            paymentsRepository.update(payment);
+        }
+        // If it does not exist, create a new one
+        else {
+            paymentsRepository.add(payment);
+        }
         return payment;
     }
 }
