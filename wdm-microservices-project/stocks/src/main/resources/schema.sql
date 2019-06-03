@@ -16,3 +16,5 @@ CREATE TABLE public.item
 
 TABLESPACE pg_default;
 ALTER TABLE public.item OWNER to postgres;
+
+CREATE INDEX item_index ON public.item(id);
