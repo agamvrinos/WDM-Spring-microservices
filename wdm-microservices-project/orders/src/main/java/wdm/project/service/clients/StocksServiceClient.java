@@ -25,9 +25,11 @@ public interface StocksServiceClient {
 	@PostMapping("/stock/add/{item_id}/{number}")
 	void addItem(@PathVariable("item_id") Long itemId, @PathVariable("number") Integer itemNumber);
 
-	@PostMapping("/stock/subtract")
-	Integer subtractItems(@RequestBody List<ItemInfo> itemInfos);
+	@PostMapping("/stock/subtract/{transaction_id}")
+	Integer subtractItem(@PathVariable("transaction_id") Long transactionId,
+                         @RequestBody List<ItemInfo> itemInfos);
 
-    @PostMapping("/add")
-    void addItems(@RequestBody List<ItemInfo> items);
+    @PostMapping("/stock/add/{transaction_id}")
+    void addItems(@PathVariable("transaction_id") Long transactionId,
+                  @RequestBody List<ItemInfo> items);
 }

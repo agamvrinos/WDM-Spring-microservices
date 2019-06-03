@@ -4,8 +4,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import wdm.project.dto.Item;
+import wdm.project.dto.JournalEntry;
+import wdm.project.dto.JournalEntryId;
 import wdm.project.dto.remote.ItemInfo;
+import wdm.project.enums.Event;
+import wdm.project.enums.Status;
 import wdm.project.exception.StockException;
+import wdm.project.repository.JournalRepository;
 import wdm.project.repository.StocksRepository;
 
 import javax.transaction.Transactional;
@@ -18,6 +23,8 @@ public class StocksService {
 
     @Autowired
     private StocksRepository stocksRepository;
+    @Autowired
+    private JournalRepository journalRepository;
 
     /**
      * Returns the Item instance with the provided id.
@@ -83,42 +90,69 @@ public class StocksService {
     /**
      * Subtracts stock from the Item instance with the provided id.
      *
+     * @param transactionId the ID of the transaction to remove the stock for
      * @param itemInfos item informations for all items which have to be subtracted.
      * @return the total price of all subtracted items
      * @throws StockException when the item with the provided ID is not
      * found or the stock is insufficient.
      */
-    public Integer subtractItems(List<ItemInfo> itemInfos) throws StockException {
-        List<Item> items = new ArrayList<>();
-        int totalPrice = 0;
-        for(ItemInfo itemInfo: itemInfos) {
-            Item item  = getItem(itemInfo.getId());
-            Integer currentStock = item.getStock();
-            if (itemInfo.getAmount() > currentStock) {
-                throw new StockException("The stock of item ID " + itemInfo.getId() + " is " + currentStock +
-                                         " and can therefore not be reduced by " + itemInfo.getAmount() + ".", HttpStatus.BAD_REQUEST);
+    public Integer subtractItems(Long transactionId, List<ItemInfo> itemInfos) throws StockException {
+        JournalEntry subtractEntry = getJournalEntry(new JournalEntryId(transactionId, Event.SUBTRACT_STOCK));
+        if (subtractEntry.getStatus().equals(Status.FAILURE.getValue())) {
+            throw new StockException("The stock could not be reduced for transaction with ID " + transactionId + ".", HttpStatus.BAD_REQUEST);
+        } else if (subtractEntry.getStatus().equals(Status.SUCCESS.getValue())) {
+            return subtractEntry.getPrice();
+        } else {
+            List<Item> items = new ArrayList<>();
+            int totalPrice = 0;
+            for (ItemInfo itemInfo : itemInfos) {
+                Item item = getItem(itemInfo.getId());
+                Integer currentStock = item.getStock();
+                if (itemInfo.getAmount() > currentStock) {
+                    subtractEntry.setStatus(Status.FAILURE);
+                    journalRepository.save(subtractEntry);
+                    throw new StockException("The stock of item ID " + itemInfo.getId() + " is " + currentStock +
+                                             " and can therefore not be reduced by " + itemInfo.getAmount() + ".", HttpStatus.BAD_REQUEST);
+                }
+                item.setStock(currentStock - itemInfo.getAmount());
+                items.add(item);
+                totalPrice += itemInfo.getAmount() * item.getPrice();
             }
-            item.setStock(currentStock - itemInfo.getAmount());
-            items.add(item);
-            totalPrice += itemInfo.getAmount() * item.getPrice();
+            stocksRepository.saveAll(items);
+            subtractEntry.setStatus(Status.SUCCESS);
+            subtractEntry.setPrice(totalPrice);
+            journalRepository.save(subtractEntry);
+            return totalPrice;
         }
-        stocksRepository.saveAll(items);
-        return totalPrice;
     }
 
     /**
      * Adds stock from the item with the provided IDs.
      *
+     * @param transactionId the ID of the transaction to add the stock for
      * @param itemInfos the item IDs with the amount of stock to add
      * @throws StockException when an item ID is not found
      */
-    public void addItems(List<ItemInfo> itemInfos) throws StockException {
-        List<Item> items = new ArrayList<>();
-        for (ItemInfo itemInfo: itemInfos) {
-            Item item = getItem(itemInfo.getId());
-            item.setStock(item.getStock() + itemInfo.getAmount());
-            items.add(item);
+    public void addItems(Long transactionId, List<ItemInfo> itemInfos) throws StockException {
+        JournalEntry addEntry = getJournalEntry(new JournalEntryId(transactionId, Event.ADD_STOCK));
+        if (addEntry.getStatus().equals(Status.PENDING)) {
+            List<Item> items = new ArrayList<>();
+            for (ItemInfo itemInfo : itemInfos) {
+                Item item = getItem(itemInfo.getId());
+                item.setStock(item.getStock() + itemInfo.getAmount());
+                items.add(item);
+            }
+            stocksRepository.saveAll(items);
+            addEntry.setStatus(Status.SUCCESS);
+            journalRepository.save(addEntry);
         }
-        stocksRepository.saveAll(items);
+    }
+
+    private JournalEntry getJournalEntry(JournalEntryId id) {
+        if (journalRepository.existsById(id)) {
+            return journalRepository.getOne(id);
+        } else {
+            return new JournalEntry(id, Status.PENDING, -1);
+        }
     }
 }

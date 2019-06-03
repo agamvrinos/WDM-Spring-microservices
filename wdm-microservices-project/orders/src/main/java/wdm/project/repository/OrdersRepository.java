@@ -6,4 +6,5 @@ import wdm.project.dto.Order;
 
 @Repository
 public interface OrdersRepository extends JpaRepository<Order, Long> {
+
 }
