@@ -19,7 +19,7 @@ eureka_uri_var=`echo $EUREKA_URI`
 eureka_uri_length=`echo ${#eureka_uri_var}`
 eureka_uri_no_port=`echo ${eureka_uri_var:7:eureka_uri_length-19}`
 while ! `nc -z "$eureka_uri_no_port" 8761`; do sleep 3; done
-echo "*******  Configuration Server has started"
+echo "*******  Eureka Server has started"
 
 
 echo "********************************************************"
