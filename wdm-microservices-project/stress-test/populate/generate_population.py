@@ -10,7 +10,7 @@ min_stock = int(sys.argv[5])
 max_stock = int(sys.argv[6])
 
 users = [{"name": f"User{index}",
-          "credit": "%d" % random.randint(min_credit, max_stock)}
+          "credit": "%d" % random.randint(min_credit, min_credit)}
          for index in range(num_users)]
 with open("users.pickle", "wb") as user_file:
     pickle.dump(users, user_file, protocol=pickle.HIGHEST_PROTOCOL)
