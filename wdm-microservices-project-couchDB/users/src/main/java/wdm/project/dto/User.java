@@ -6,10 +6,6 @@ import org.ektorp.support.TypeDiscriminator;
 
 public class User extends CouchDbDocument {
 
-	@TypeDiscriminator
-	@JsonProperty("_id")
-	private String id;
-
 	@JsonProperty("name")
 	private String name;
 
@@ -17,14 +13,6 @@ public class User extends CouchDbDocument {
 	private Integer credit;
 
 	public User() {
-	}
-
-	public String getId() {
-		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
 	}
 
 	public String getName() {
@@ -46,7 +34,7 @@ public class User extends CouchDbDocument {
 	@Override
 	public String toString() {
 		return "User{" +
-				"id=" + id +
+				"id=" + super.getId() +
 				", name='" + name + '\'' +
 				", credit=" + credit +
 				'}';

@@ -6,15 +6,11 @@ import org.ektorp.support.TypeDiscriminator;
 
 public class Payment extends CouchDbDocument {
 
-    @TypeDiscriminator
     @JsonProperty("_id")
     private String id;
 
     @JsonProperty("userId")
     private String userId;
-
-    @JsonProperty("orderId")
-    private String orderId;
 
     @JsonProperty("status")
     private String status;
@@ -22,12 +18,10 @@ public class Payment extends CouchDbDocument {
     public Payment() {
     }
 
-    @Override
     public String getId() {
         return id;
     }
 
-    @Override
     public void setId(String id) {
         this.id = id;
     }
@@ -38,14 +32,6 @@ public class Payment extends CouchDbDocument {
 
     public void setUserId(String userId) {
         this.userId = userId;
-    }
-
-    public String getOrderId() {
-        return orderId;
-    }
-
-    public void setOrderId(String orderId) {
-        this.orderId = orderId;
     }
 
     public String getStatus() {
@@ -61,7 +47,6 @@ public class Payment extends CouchDbDocument {
         return "Payment{" +
                 "id='" + id + '\'' +
                 ", userId='" + userId + '\'' +
-                ", orderId='" + orderId + '\'' +
                 ", status='" + status + '\'' +
                 '}';
     }

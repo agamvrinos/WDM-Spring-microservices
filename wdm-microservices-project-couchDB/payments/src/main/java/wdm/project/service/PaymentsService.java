@@ -1,11 +1,9 @@
 package wdm.project.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import feign.FeignException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClientResponseException;
-import org.springframework.web.client.RestTemplate;
 import wdm.project.dto.Payment;
 import wdm.project.enums.Status;
 import wdm.project.exception.PaymentException;
@@ -36,11 +34,11 @@ public class PaymentsService {
             throw new PaymentException("Order ID cannot be null", HttpStatus.BAD_REQUEST);
         }
         Payment payment;
-        if (!paymentsRepository.findByOrderId(orderId).isEmpty()) {
-            payment = paymentsRepository.findByOrderId(orderId).get(0);
+        if (paymentsRepository.contains(orderId)) {
+            payment = paymentsRepository.get(orderId);
         } else {
             payment = new Payment();
-            payment.setOrderId(orderId);
+            payment.setId(orderId);
             payment.setStatus(Status.PENDING.getValue());
         }
         return payment;
@@ -59,30 +57,27 @@ public class PaymentsService {
      */
     public Payment payOrder(String orderId, String userId, Integer totalPrice) throws PaymentException {
         Payment payment;
-        if (!paymentsRepository.findByOrderId(orderId).isEmpty()) {
-            payment = paymentsRepository.findByOrderId(orderId).get(0);
+        if (paymentsRepository.contains(orderId)) {
+            payment = paymentsRepository.get(orderId);
+            return payment;
         }
         // If the payment does not exist, create a new one
         else {
             payment = new Payment();
-            payment.setOrderId(orderId);
+            payment.setId(orderId);
             payment.setUserId(userId);
         }
 
-        String paymentStatus = Status.FAILURE.getValue();
         try {
-            //TODO: Update communication
-            RestTemplate re = new RestTemplate();
-            JsonNode response = re.postForObject("http://localhost:8083/users/credit/subtract/" + userId + "/" + totalPrice, null, JsonNode.class);
-            String responseStatus = response.get("status").asText();
-            if (responseStatus != null) {
-                paymentStatus = Status.findStatusEnum(responseStatus).getValue();
+            usersServiceClient.subtractCredit(userId, totalPrice);
+            payment.setStatus("SUCCESS");
+        } catch (FeignException exception) {
+            if (exception.status() == 400) {
+                payment.setStatus("FAILURE");
+            } else {
+                throw new PaymentException("Something went wrong while processing the request", HttpStatus.INTERNAL_SERVER_ERROR);
             }
-        } catch (RestClientResponseException exception) {
-            // TODO: Handle by checking other instances in case of timeout.
-            throw new PaymentException("There was an exception while communicating with the Users microservice.", HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        payment.setStatus(paymentStatus);
         paymentsRepository.add(payment);
         return payment;
     }

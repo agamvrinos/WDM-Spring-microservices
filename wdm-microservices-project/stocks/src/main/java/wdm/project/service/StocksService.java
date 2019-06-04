@@ -105,4 +105,20 @@ public class StocksService {
         stocksRepository.saveAll(items);
         return totalPrice;
     }
+
+    /**
+     * Adds stock from the item with the provided IDs.
+     *
+     * @param itemInfos the item IDs with the amount of stock to add
+     * @throws StockException when an item ID is not found
+     */
+    public void addItems(List<ItemInfo> itemInfos) throws StockException {
+        List<Item> items = new ArrayList<>();
+        for (ItemInfo itemInfo: itemInfos) {
+            Item item = getItem(itemInfo.getId());
+            item.setStock(item.getStock() + itemInfo.getAmount());
+            items.add(item);
+        }
+        stocksRepository.saveAll(items);
+    }
 }

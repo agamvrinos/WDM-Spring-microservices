@@ -8,8 +8,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import wdm.project.dto.Item;
+import wdm.project.dto.remote.ItemInfo;
 import wdm.project.exception.StockException;
 import wdm.project.service.StocksService;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/stock")
@@ -46,5 +49,10 @@ public class StocksEndpoint {
                              @PathVariable("number") Integer itemNumber
     ) throws StockException {
         stocksService.subtractItem(itemId, itemNumber);
+    }
+
+    @PostMapping("/subtract")
+    public Integer subtractItems(@RequestBody List<ItemInfo> items) throws StockException {
+        return stocksService.subtractItems(items);
     }
 }

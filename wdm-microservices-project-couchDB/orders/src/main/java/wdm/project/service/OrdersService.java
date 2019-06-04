@@ -1,6 +1,8 @@
 package wdm.project.service;
 
 import java.util.List;
+
+import feign.FeignException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -52,7 +54,6 @@ public class OrdersService {
      */
     public void removeOrder(String orderId) throws OrderException {
         if (ordersRepository.contains(orderId)) {
-        	//FIXME: remove the orderItems also?
             Order storedOrder = ordersRepository.get(orderId);
             ordersRepository.remove(storedOrder);
         } else {
@@ -81,7 +82,7 @@ public class OrdersService {
         Order order  = ordersRepository.get(orderId);
         OrdersWrapper ordersWrapper = new OrdersWrapper();
         ordersWrapper.setOrderItems(order.getOrderItems());
-        ordersWrapper.setPaymentStatus("SUCCESSFUL"); // TODO call the payment microservice for that
+        ordersWrapper.setPaymentStatus(paymentsServiceClient.getPaymentStatus(orderId));
         ordersWrapper.setUserId(order.getUserId());
 
         return ordersWrapper;
@@ -98,6 +99,13 @@ public class OrdersService {
     public void addItem(ItemInfo requestOrderItem, String orderId, String itemId) throws OrderException {
 
         checkItems(orderId, itemId);
+
+        // Check whether item exists.
+        try {
+            stocksServiceClient.getItem(itemId);
+        } catch (FeignException exception) {
+            throw new OrderException("There is no item with id \"" + itemId + "\"");
+        }
 
 	    Order storedOrder = ordersRepository.get(orderId);
 	    List<ItemInfo> storedItems =  storedOrder.getOrderItems();
@@ -160,12 +168,21 @@ public class OrdersService {
      * successful transaction
      * FAILURE for a failed transaction.
      */
-    public String checkoutOrder(String orderId){
-        // TODO: connect everything
-        return "FAILURE";
+    public void  checkoutOrder(String orderId) throws OrderException {
+        OrdersWrapper order = findOrder(orderId);
+        try {
+            Integer price = stocksServiceClient.subtractItems(order.getOrderItems());
+            paymentsServiceClient.payOrder(orderId, order.getUserId(), price);
+        } catch (FeignException exception) {
+            if (exception.status() == 400) {
+                throw new OrderException("One of the item IDs was not found", HttpStatus.NOT_FOUND);
+            } else {
+                throw new OrderException("Something went wrong when handling the checkout", HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        }
     }
 
-     private void checkItems(String orderId, String itemId)throws OrderException{
+    private void checkItems(String orderId, String itemId)throws OrderException{
         if (orderId == null) {
             throw new OrderException("Order id was not provided");
         }
