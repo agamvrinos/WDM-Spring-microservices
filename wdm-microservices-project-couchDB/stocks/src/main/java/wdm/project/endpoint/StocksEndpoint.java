@@ -55,4 +55,10 @@ public class StocksEndpoint {
     public Integer subtractItems(@RequestBody List<ItemInfo> items) throws StockException {
         return stocksService.subtractItems(items);
     }
+
+    @PostMapping("/add")
+    public void addItems(@RequestBody List<ItemInfo> items) throws StockException {
+        stocksService.addItems(items);
+    }
+
 }

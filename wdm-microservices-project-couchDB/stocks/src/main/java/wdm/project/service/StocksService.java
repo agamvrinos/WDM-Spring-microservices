@@ -125,6 +125,19 @@ public class StocksService {
         return totalPrice;
     }
 
+    public void addItems(List<ItemInfo> itemInfos) throws StockException {
+
+        for (ItemInfo itemInfo : itemInfos) {
+
+            Item item = getItem(itemInfo.getId());
+            Integer currentStock = item.getStock();
+            item.setStock(currentStock + itemInfo.getAmount());
+            stocksRepository.update(item);
+
+        }
+
+    }
+
     private void rollbackItemSubtraction(List<ItemInfo> itemInfos, int idxOfFailure) throws StockException {
         for(int i = 0; i < idxOfFailure; i++) {
             ItemInfo itemInfo = itemInfos.get(i);

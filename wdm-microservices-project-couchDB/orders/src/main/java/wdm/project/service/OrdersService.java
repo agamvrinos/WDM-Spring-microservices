@@ -168,16 +168,26 @@ public class OrdersService {
      * successful transaction
      * FAILURE for a failed transaction.
      */
-    public void  checkoutOrder(String orderId) throws OrderException {
+    public void checkoutOrder(String orderId) throws OrderException {
         OrdersWrapper order = findOrder(orderId);
+        Integer price;
         try {
-            Integer price = stocksServiceClient.subtractItems(order.getOrderItems());
+            price = stocksServiceClient.subtractItems(order.getOrderItems());
+        } catch (FeignException exception) {
+            if (exception.status() == 400) {
+                throw new OrderException("Not enough stock on a specific item", HttpStatus.BAD_REQUEST);
+            } else {
+                throw new OrderException("Something went wrong when subtracting the stock.", HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        }
+        try {
             paymentsServiceClient.payOrder(orderId, order.getUserId(), price);
         } catch (FeignException exception) {
             if (exception.status() == 400) {
-                throw new OrderException("One of the item IDs was not found", HttpStatus.NOT_FOUND);
+                stocksServiceClient.addItems(order.getOrderItems());
+                throw new OrderException("Not enough user credit", HttpStatus.BAD_REQUEST);
             } else {
-                throw new OrderException("Something went wrong when handling the checkout", HttpStatus.INTERNAL_SERVER_ERROR);
+                throw new OrderException("Something went wrong when paying the order.", HttpStatus.INTERNAL_SERVER_ERROR);
             }
         }
     }
