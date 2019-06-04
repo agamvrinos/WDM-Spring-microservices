@@ -11,6 +11,8 @@ import wdm.project.exception.UsersException;
 import wdm.project.repository.JournalRepository;
 import wdm.project.repository.UsersRepository;
 
+import java.util.List;
+
 @Service
 public class UsersService {
 
@@ -71,11 +73,11 @@ public class UsersService {
         if (id == null) {
             throw new UsersException("Id was not provided", HttpStatus.BAD_REQUEST);
         }
-        boolean existsUser = usersRepository.contains(id);
-        if (!existsUser) {
+        List<User> existsUser = usersRepository.findUser(id);
+        if (existsUser.isEmpty()) {
             throw new UsersException("There is no user with id \"" + id + "\"", HttpStatus.NOT_FOUND);
         }
-        return usersRepository.get(id);
+        return existsUser.get(0);
     }
 
     /**
