@@ -15,7 +15,6 @@ import wdm.project.repository.JournalRepository;
 import wdm.project.repository.UsersRepository;
 
 @Service
-@Transactional
 public class UsersService {
 
     @Autowired
@@ -130,7 +129,7 @@ public class UsersService {
         }
         // Not processed, process the transaction.
         else {
-            reduceEntry = new JournalEntry(journalId, Status.PENDING);
+            reduceEntry = new JournalEntry(journalId, Status.SUCCESS);
             Integer credit = user.getCredit();
             if (amount > credit) {
                 reduceEntry.setStatus(Status.FAILURE);
@@ -139,7 +138,6 @@ public class UsersService {
             } else {
                 user.setCredit(credit - amount);
                 usersRepository.save(user);
-                reduceEntry.setStatus(Status.SUCCESS);
                 journalRepository.save(reduceEntry);
             }
         }
