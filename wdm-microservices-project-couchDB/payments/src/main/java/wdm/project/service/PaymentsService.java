@@ -59,6 +59,7 @@ public class PaymentsService {
         Payment payment;
         if (paymentsRepository.contains(orderId)) {
             payment = paymentsRepository.get(orderId);
+            return payment;
         }
         // If the payment does not exist, create a new one
         else {

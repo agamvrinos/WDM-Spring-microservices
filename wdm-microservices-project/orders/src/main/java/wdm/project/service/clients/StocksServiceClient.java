@@ -1,5 +1,7 @@
 package wdm.project.service.clients;
 
+import java.util.List;
+
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -7,8 +9,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import wdm.project.dto.ItemInfo;
 import wdm.project.dto.remote.Item;
-
-import java.util.List;
 
 @FeignClient(name = "stocks-service")
 public interface StocksServiceClient {
@@ -27,4 +27,7 @@ public interface StocksServiceClient {
 
 	@PostMapping("/stock/subtract")
 	Integer subtractItems(@RequestBody List<ItemInfo> itemInfos);
+
+    @PostMapping("/add")
+    void addItems(@RequestBody List<ItemInfo> items);
 }

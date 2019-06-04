@@ -1,5 +1,9 @@
 package wdm.project.service;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
 import feign.FeignException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -9,16 +13,11 @@ import wdm.project.dto.Order;
 import wdm.project.dto.OrderItem;
 import wdm.project.dto.OrderItemId;
 import wdm.project.dto.OrdersWrapper;
-import wdm.project.dto.remote.Item;
 import wdm.project.exception.OrderException;
 import wdm.project.repository.OrdersItemsRepository;
 import wdm.project.repository.OrdersRepository;
 import wdm.project.service.clients.PaymentsServiceClient;
 import wdm.project.service.clients.StocksServiceClient;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 
 @Service
 public class OrdersService {
@@ -177,14 +176,24 @@ public class OrdersService {
      */
     public void checkoutOrder(Long orderId) throws OrderException {
         OrdersWrapper order = findOrder(orderId);
+        Integer price;
         try {
-            Integer price = stocksServiceClient.subtractItems(order.getOrderItems());
-            paymentsServiceClient.payOrder(orderId, order.getUserId(), price);
+            price = stocksServiceClient.subtractItems(order.getOrderItems());
         } catch (FeignException exception) {
             if (exception.status() == 400) {
                 throw new OrderException(new String(exception.content()), HttpStatus.BAD_REQUEST);
             } else {
-                throw new OrderException("Something went wrong when handling the checkout", HttpStatus.INTERNAL_SERVER_ERROR);
+                throw new OrderException("Something went wrong when subtracting the stock.", HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        }
+        try {
+            paymentsServiceClient.payOrder(orderId, order.getUserId(), price);
+        } catch (FeignException exception) {
+            if (exception.status() == 400) {
+                stocksServiceClient.addItems(order.getOrderItems());
+                throw new OrderException(new String(exception.content()), HttpStatus.BAD_REQUEST);
+            } else {
+                throw new OrderException("Something went wrong when paying the order.", HttpStatus.INTERNAL_SERVER_ERROR);
             }
         }
     }
