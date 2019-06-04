@@ -59,8 +59,11 @@ public class OrdersService {
      * @throws OrderException when the order with the provided ID is not found
      */
     public void removeOrder(String orderId) throws OrderException {
-        if (ordersRepository.contains(orderId)) {
-            Order storedOrder = ordersRepository.get(orderId);
+
+        List<Order> orders = ordersRepository.findOrder(orderId);
+
+        if (!orders.isEmpty()) {
+            Order storedOrder = orders.get(0);
             ordersRepository.remove(storedOrder);
         } else {
             throw new OrderException("There is no order with ID " + orderId + ".", HttpStatus.NOT_FOUND);
@@ -81,11 +84,14 @@ public class OrdersService {
 		if (orderId == null) {
 			throw new OrderException("The order id was not provided");
 		}
-		if (!ordersRepository.contains(orderId)){
+
+        List<Order> orders = ordersRepository.findOrder(orderId);
+
+		if (orders.isEmpty()){
             throw new OrderException("The order does not exist");
         }
 
-        Order order  = ordersRepository.get(orderId);
+        Order order  = orders.get(0);
         OrdersWrapper ordersWrapper = new OrdersWrapper();
         ordersWrapper.setOrderItems(order.getOrderItems());
         ordersWrapper.setPaymentStatus(paymentsServiceClient.getPaymentStatus(orderId));
@@ -113,7 +119,7 @@ public class OrdersService {
             throw new OrderException("There is no item with id \"" + itemId + "\"");
         }
 
-	    Order storedOrder = ordersRepository.get(orderId);
+	    Order storedOrder = ordersRepository.findOrder(orderId).get(0);
 	    List<ItemInfo> storedItems =  storedOrder.getOrderItems();
 
 	    boolean storedFlag = false;
@@ -150,8 +156,10 @@ public class OrdersService {
 
         checkItems(orderId, itemId);
 
-        if (ordersRepository.contains(orderId)){
-            Order storedOrder = ordersRepository.get(orderId);
+        List<Order> orders = ordersRepository.findOrder(orderId);
+
+        if (!orders.isEmpty()){
+            Order storedOrder = orders.get(0);
             List<ItemInfo> storedItems =  storedOrder.getOrderItems();
 
             for (ItemInfo storedItem : storedItems) {
@@ -170,7 +178,6 @@ public class OrdersService {
      * Checks-out an order invoking every other micro-service.
      *
      * @param orderId the id of order
-     * @return the status of the transaction SUCCESS for a
      * successful transaction
      * FAILURE for a failed transaction.
      */
@@ -178,8 +185,11 @@ public class OrdersService {
         OrdersWrapper order = findOrder(orderId);
         JournalEntry checkoutEntry;
         String id = orderId + "-" + Event.CHECKOUT;
-        if (journalRepository.contains(id)) {
-            checkoutEntry = journalRepository.get(id);
+
+        List<JournalEntry> journalEntries = journalRepository.findJournal(id);
+
+        if (!journalEntries.isEmpty()) {
+            checkoutEntry = journalEntries.get(0);
         } else {
             checkoutEntry = new JournalEntry(id, Status.STOCK_PENDING, -1);
         }
@@ -229,7 +239,7 @@ public class OrdersService {
         }
 
         // Update already existing checkout entry document
-        if (journalRepository.contains(checkoutEntry.getId())) {
+        if (!journalRepository.findJournal(checkoutEntry.getId()).isEmpty()) {
             journalRepository.update(checkoutEntry);
         }
         // If it does not exist, create a new one
@@ -246,8 +256,8 @@ public class OrdersService {
         if (itemId == null) {
             throw new OrderException("Item id was not provided");
         }
-        boolean existsOrder = ordersRepository.contains(orderId);
-        if (!existsOrder) {
+        boolean existsOrder = ordersRepository.findOrder(orderId).isEmpty();
+        if (existsOrder) {
             throw new OrderException("There is no order with it \"" + orderId + "\"");
         }
     }
