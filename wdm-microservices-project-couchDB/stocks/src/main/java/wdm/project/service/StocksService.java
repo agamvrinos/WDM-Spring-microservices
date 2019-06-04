@@ -115,34 +115,57 @@ public class StocksService {
      * found or the stock is insufficient.
      */
     public Integer subtractItems(String transactionId, List<ItemInfo> itemInfos) throws StockException {
-        JournalEntry subtractEntry = getJournalEntry(transactionId + "-" + Event.SUBTRACT_STOCK);
-        if (subtractEntry.getStatus().equals(Status.FAILURE.getValue())) {
-            throw new StockException("The stock could not be reduced for transaction with ID " + transactionId + ".", HttpStatus.BAD_REQUEST);
-        } else if (subtractEntry.getStatus().equals(Status.SUCCESS.getValue())) {
-            return subtractEntry.getPrice();
-        } else {
+
             int totalPrice = 0;
             int idxOfFailure = 0;
+
             for (ItemInfo itemInfo : itemInfos) {
+
                 Item item = getItem(itemInfo.getId());
                 Integer currentStock = item.getStock();
-                if (itemInfo.getAmount() > currentStock) {
-                    subtractEntry.setStatus(Status.FAILURE);
+                JournalEntry subtractEntry = getJournalEntry(transactionId + "-"+ item.getId() +"-" + Event.SUBTRACT_STOCK);
+
+                if (journalRepository.contains(subtractEntry.getId())) {
+                // If entry exists cases
+                    String status = journalRepository.get(subtractEntry.getId()).getStatus();
+
+                    if (status.equals(Status.PENDING.getValue())) {
+                        // If entry exists and is pending
+                        if (itemInfo.getAmount() > currentStock) {
+                            subtractEntry.setStatus(Status.FAILURE);
+                            journalRepository.update(subtractEntry);
+                            rollbackItemSubtraction(transactionId, itemInfos, idxOfFailure);
+                            throw new StockException("The stock of item ID " + itemInfo.getId() + " is " + currentStock +
+                                    " and can therefore not be reduced by " + itemInfo.getAmount() + ".", HttpStatus.BAD_REQUEST);
+                        }
+                        item.setStock(currentStock - itemInfo.getAmount());
+                        totalPrice += itemInfo.getAmount() * item.getPrice();
+                        subtractEntry.setStatus(Status.SUCCESS);
+                        journalRepository.update(subtractEntry);
+                        stocksRepository.update(item);
+                    }
+                    else if (status.equals(Status.FAILURE.getValue())){
+                        //If it has failed, rollback from the previous index
+                        rollbackItemSubtraction(transactionId, itemInfos, idxOfFailure-1);
+                    }
+                }else{
+                    if (itemInfo.getAmount() > currentStock) {
+                        subtractEntry.setStatus(Status.FAILURE);
+                        journalRepository.add(subtractEntry);
+                        rollbackItemSubtraction(transactionId, itemInfos, idxOfFailure);
+                        throw new StockException("The stock of item ID " + itemInfo.getId() + " is " + currentStock +
+                                " and can therefore not be reduced by " + itemInfo.getAmount() + ".", HttpStatus.BAD_REQUEST);
+                    }
+                    item.setStock(currentStock - itemInfo.getAmount());
+                    totalPrice += itemInfo.getAmount() * item.getPrice();
+                    subtractEntry.setStatus(Status.SUCCESS);
                     journalRepository.add(subtractEntry);
-                    rollbackItemSubtraction(itemInfos, idxOfFailure);
-                    throw new StockException("The stock of item ID " + itemInfo.getId() + " is " + currentStock +
-                            " and can therefore not be reduced by " + itemInfo.getAmount() + ".", HttpStatus.BAD_REQUEST);
+                    stocksRepository.update(item);
+
                 }
-                item.setStock(currentStock - itemInfo.getAmount());
-                totalPrice += itemInfo.getAmount() * item.getPrice();
-                stocksRepository.update(item);
                 idxOfFailure++;
             }
-            subtractEntry.setStatus(Status.SUCCESS);
-            subtractEntry.setPrice(totalPrice);
-            journalRepository.add(subtractEntry);
             return totalPrice;
-        }
     }
 
     /**
@@ -155,33 +178,44 @@ public class StocksService {
      */
     public void addItems(String transactionId, List<ItemInfo> itemInfos) throws StockException {
 
-        JournalEntry addEntry = getJournalEntry(transactionId + "-" + Event.ADD_STOCK);
-
-        if (addEntry.getStatus().equals(Status.PENDING.getValue())) {
-
             for (ItemInfo itemInfo : itemInfos) {
+
                 Item item = getItem(itemInfo.getId());
                 Integer currentStock = item.getStock();
                 item.setStock(currentStock + itemInfo.getAmount());
-                stocksRepository.update(item);
-            }
 
-            addEntry.setStatus(Status.SUCCESS);
-            journalRepository.add(addEntry);
-        }
+                JournalEntry addEntry = getJournalEntry(transactionId + "-" + item.getId() +"-" + Event.ADD_STOCK);
+
+                if(journalRepository.contains(addEntry.getId())){
+                    if (journalRepository.get(addEntry.getId()).getStatus().equals(Status.PENDING.getValue())) {
+                        // If it exists and is PENDING
+                        addEntry.setStatus(Status.SUCCESS);
+                        stocksRepository.update(item);
+                        journalRepository.update(addEntry);
+                    }
+                }
+                else{
+                    addEntry.setStatus(Status.SUCCESS);
+                    stocksRepository.update(item);
+                    journalRepository.add(addEntry);
+                }
+            }
 
     }
 
-    private void rollbackItemSubtraction(List<ItemInfo> itemInfos, int idxOfFailure) throws StockException {
+    private void rollbackItemSubtraction(String transactionId, List<ItemInfo> itemInfos, int idxOfFailure) throws StockException {
 
         for(int i=0;i<idxOfFailure;i++) {
 
             ItemInfo itemInfo = itemInfos.get(i);
-
             Item item = getItem(itemInfo.getId());
+            String journalId = transactionId + "-"+ item.getId() +"-" + Event.SUBTRACT_STOCK;
+            JournalEntry rollbackEntry = getJournalEntry(journalId);
+            rollbackEntry.setStatus(Status.FAILURE);
+            rollbackEntry.setId(journalId);
             Integer currentStock = item.getStock();
-
             item.setStock(currentStock + itemInfo.getAmount());
+            journalRepository.update(rollbackEntry);
             stocksRepository.update(item);
 
         }
@@ -191,7 +225,7 @@ public class StocksService {
         if (journalRepository.contains(id)) {
             return journalRepository.get(id);
         } else {
-            return new JournalEntry(id, Status.PENDING, -1);
+            return new JournalEntry(id, Status.PENDING);
         }
     }
 }

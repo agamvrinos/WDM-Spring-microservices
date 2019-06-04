@@ -193,6 +193,7 @@ public class OrdersService {
             case PAYMENT_FAILURE: throw new OrderException("The credit of user " + order.getUserId() + " was not sufficient to pay " + checkoutEntry.getPrice(), HttpStatus.BAD_REQUEST);
             case STOCK_PENDING: {
                 try {
+                    //TODO: OrderItems 1-1 keep paid items somehow
                     Integer price = stocksServiceClient.subtractItems(orderId, order.getOrderItems());
                     checkoutEntry.setPrice(price);
                     checkoutEntry.setStatus(Status.STOCK_SUCCESS);
