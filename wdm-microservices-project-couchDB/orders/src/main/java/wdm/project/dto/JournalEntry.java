@@ -15,15 +15,6 @@ public class JournalEntry  extends CouchDbDocument {
 	@JsonProperty("status")
 	private String status;
 
-	@Override
-	public String toString() {
-		return "JournalEntry{" +
-				"id=" + id +
-				", type='" + type + '\'' +
-				", status='" + status + '\'' +
-				'}';
-	}
-
 	private Integer price;
 
 	public JournalEntry() {
@@ -112,5 +103,14 @@ public class JournalEntry  extends CouchDbDocument {
 	 */
 	public Integer getPrice() {
 		return price;
+	}
+
+	@Override
+	public String toString() {
+		return "JournalEntry{" +
+				"id=" + id +
+				", type='" + type + '\'' +
+				", status='" + status + '\'' +
+				'}';
 	}
 }

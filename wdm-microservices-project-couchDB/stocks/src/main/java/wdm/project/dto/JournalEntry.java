@@ -16,14 +16,6 @@ public class JournalEntry  extends CouchDbDocument {
     @JsonProperty("status")
     private String status;
 
-    @Override
-    public String toString() {
-        return "JournalEntry{" +
-                "id=" + id +
-                ", status='" + status + '\'' +
-                '}';
-    }
-
     public JournalEntry() {
         this.type = "event";
     }
@@ -73,4 +65,11 @@ public class JournalEntry  extends CouchDbDocument {
         return status;
     }
 
+    @Override
+    public String toString() {
+        return "JournalEntry{" +
+                "id=" + id +
+                ", status='" + status + '\'' +
+                '}';
+    }
 }
