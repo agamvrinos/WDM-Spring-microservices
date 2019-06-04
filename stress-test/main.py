@@ -22,7 +22,8 @@ class User(TaskSet):
 
     def _get_new_order(self):
         create_response = self.client.post(
-            url=f"/api/orders/orders/create/{random.choice(self.user_ids)}")
+            url=f"/api/orders/orders/create/{random.choice(self.user_ids)}",
+            name="/api/orders/orders/create/{user_id}")
         if create_response.status_code == 200:
             self.order_id = create_response.json()
 
@@ -30,7 +31,8 @@ class User(TaskSet):
     def add_item(self):
         response = self.client.post(
             url=f"/api/orders/orders/addItem/{self.order_id}/{random.choice(self.item_ids)}",
-            json={"amount": random.randint(1, 5)}
+            json={"amount": random.randint(1, 5)},
+            name="/api/orders/orders/addItem/{order_id}/{item_id}"
         )
         if response.status_code == 400:
             response.success()
@@ -38,7 +40,8 @@ class User(TaskSet):
     @task(1)
     def check_status(self):
         response = self.client.get(
-            url=f"/api/orders/orders/find/{self.order_id}"
+            url=f"/api/orders/orders/find/{self.order_id}",
+            name="/api/orders/orders/find/{order_id}"
         )
         if response.status_code == 400:
             response.success()
@@ -46,7 +49,8 @@ class User(TaskSet):
     @task(1)
     def checkout(self):
         response = self.client.post(
-            url=f"/api/orders/orders/checkout/{self.order_id}"
+            url=f"/api/orders/orders/checkout/{self.order_id}",
+            name="/api/orders/orders/checkout/{order_id}"
         )
         if response.status_code == 400:
             response.success()
