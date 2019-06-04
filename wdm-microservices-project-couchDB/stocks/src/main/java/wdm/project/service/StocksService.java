@@ -34,11 +34,13 @@ public class StocksService {
         if (itemId == null) {
             throw new StockException("Provided item ID was null. Please provide a valid ID.", HttpStatus.BAD_REQUEST);
         }
-        boolean existsStocks = stocksRepository.contains(itemId);
-        if (!existsStocks) {
+
+        List<Item> items = stocksRepository.findItem(itemId);
+        boolean existsStocks = items.isEmpty();
+        if (existsStocks) {
             throw new StockException("The item with ID " + itemId + " was not found.", HttpStatus.NOT_FOUND);
         }
-        return stocksRepository.get(itemId);
+        return items.get(0);
     }
 
     /**
@@ -125,9 +127,11 @@ public class StocksService {
                 Integer currentStock = item.getStock();
                 JournalEntry subtractEntry = getJournalEntry(transactionId + "-"+ item.getId() +"-" + Event.SUBTRACT_STOCK);
 
-                if (journalRepository.contains(subtractEntry.getId())) {
+                List<JournalEntry> journalEntries = journalRepository.findJournal(subtractEntry.getId());
+
+                if (!journalEntries.isEmpty()) {
                 // If entry exists cases
-                    String status = journalRepository.get(subtractEntry.getId()).getStatus();
+                    String status = journalEntries.get(0).getStatus();
 
                     if (status.equals(Status.PENDING.getValue())) {
                         // If entry exists and is pending
@@ -187,8 +191,10 @@ public class StocksService {
                 JournalEntry addEntry = getJournalEntry(transactionId + "-" + item.getId() +"-" + Event.ADD_STOCK);
                 addEntry.setStatus(Status.SUCCESS);
 
-                if(journalRepository.contains(addEntry.getId())){
-                    if (journalRepository.get(addEntry.getId()).getStatus().equals(Status.PENDING.getValue())) {
+                List<JournalEntry> journalEntries = journalRepository.findJournal(addEntry.getId());
+
+                if(!journalEntries.isEmpty()){
+                    if (journalEntries.get(0).getStatus().equals(Status.PENDING.getValue())) {
                         // If it exists and is PENDING
                         stocksRepository.update(item);
                         journalRepository.update(addEntry);
@@ -219,8 +225,11 @@ public class StocksService {
     }
 
     private JournalEntry getJournalEntry(String id) {
-        if (journalRepository.contains(id)) {
-            JournalEntry journalEntry = journalRepository.get(id);
+
+        List<JournalEntry> journalEntries = journalRepository.findJournal(id);
+
+        if (!journalEntries.isEmpty()) {
+            JournalEntry journalEntry = journalEntries.get(0);
             journalEntry.setId(id);
             return journalEntry;
         } else {
