@@ -2,7 +2,6 @@ package wdm.project.enums;
 
 public enum Status {
     SUCCESS("SUCCESS"),
-    PENDING("PENDING"),
     FAILURE("FAILURE");
 
     private String value;

@@ -2,6 +2,7 @@ package wdm.project.enums;
 
 public enum Event {
     SUBTRACT_STOCK("SUBTRACT_STOCK"),
+    PENDING("PENDING"),
     ADD_STOCK("ADD_STOCK");
 
     private String value;

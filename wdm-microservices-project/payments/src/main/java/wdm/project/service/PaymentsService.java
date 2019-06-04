@@ -61,7 +61,7 @@ public class PaymentsService {
     public Payment payOrder(Long orderId, Long userId, Integer totalPrice) throws PaymentException {
         Payment payment;
         if (paymentsRepository.existsByOrderId(orderId)) {
-            payment = paymentsRepository.findByOrderId(orderId);
+            return paymentsRepository.findByOrderId(orderId);
         } else {
             payment = new Payment();
             payment.setOrderId(orderId);
