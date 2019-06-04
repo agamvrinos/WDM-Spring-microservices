@@ -78,14 +78,7 @@ public class PaymentsService {
                 throw new PaymentException("Something went wrong while processing the request", HttpStatus.INTERNAL_SERVER_ERROR);
             }
         }
-        // Update already existing payment document
-        if (paymentsRepository.contains(orderId)) {
-            paymentsRepository.update(payment);
-        }
-        // If it does not exist, create a new one
-        else {
-            paymentsRepository.add(payment);
-        }
+        paymentsRepository.add(payment);
         return payment;
     }
 }
