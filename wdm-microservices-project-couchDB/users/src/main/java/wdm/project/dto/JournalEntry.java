@@ -2,11 +2,8 @@ package wdm.project.dto;
 
 import org.ektorp.support.CouchDbDocument;
 import wdm.project.enums.Status;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.ektorp.support.TypeDiscriminator;
 
-@TypeDiscriminator("doc._type === 'event'")
 public class JournalEntry  extends CouchDbDocument {
 
 	@JsonProperty("_id")

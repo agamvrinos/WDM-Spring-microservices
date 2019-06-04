@@ -2,9 +2,7 @@ package wdm.project.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.ektorp.support.CouchDbDocument;
-import org.ektorp.support.TypeDiscriminator;
 
-@TypeDiscriminator("doc._type === 'object'")
 public class Item extends CouchDbDocument {
 
 	@JsonProperty("title")
