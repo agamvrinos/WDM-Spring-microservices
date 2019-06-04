@@ -209,10 +209,8 @@ public class StocksService {
 
             ItemInfo itemInfo = itemInfos.get(i);
             Item item = getItem(itemInfo.getId());
-            String journalId = transactionId + "-"+ item.getId() +"-" + Event.SUBTRACT_STOCK;
-            JournalEntry rollbackEntry = getJournalEntry(journalId);
+            JournalEntry rollbackEntry = getJournalEntry(transactionId + "-"+ item.getId() +"-" + Event.SUBTRACT_STOCK);
             rollbackEntry.setStatus(Status.FAILURE);
-            rollbackEntry.setId(journalId);
             Integer currentStock = item.getStock();
             item.setStock(currentStock + itemInfo.getAmount());
             journalRepository.update(rollbackEntry);
@@ -223,7 +221,9 @@ public class StocksService {
 
     private JournalEntry getJournalEntry(String id) {
         if (journalRepository.contains(id)) {
-            return journalRepository.get(id);
+            JournalEntry journalEntry = journalRepository.get(id);
+            journalEntry.setId(id);
+            return journalEntry;
         } else {
             return new JournalEntry(id, Status.PENDING);
         }
