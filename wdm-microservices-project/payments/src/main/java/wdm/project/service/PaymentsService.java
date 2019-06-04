@@ -1,5 +1,7 @@
 package wdm.project.service;
 
+import javax.transaction.Transactional;
+
 import feign.FeignException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -11,6 +13,7 @@ import wdm.project.repository.PaymentsRepository;
 import wdm.project.service.clients.UsersServiceClient;
 
 @Service
+@Transactional
 public class PaymentsService {
 
     @Autowired
@@ -57,16 +60,16 @@ public class PaymentsService {
      */
     public Payment payOrder(Long orderId, Long userId, Integer totalPrice) throws PaymentException {
         Payment payment;
-        if (paymentsRepository.existsById(orderId)) {
-            payment = paymentsRepository.getOne(orderId);
+        if (paymentsRepository.existsByOrderId(orderId)) {
+            return paymentsRepository.findByOrderId(orderId);
         } else {
             payment = new Payment();
             payment.setOrderId(orderId);
             payment.setUserId(userId);
-        }
+    }
 
         try {
-            usersServiceClient.subtractCredit(orderId, totalPrice);
+            usersServiceClient.subtractCredit(userId, orderId, totalPrice);
             payment.setStatus("SUCCESS");
         } catch (FeignException exception) {
             if (exception.status() == 400) {

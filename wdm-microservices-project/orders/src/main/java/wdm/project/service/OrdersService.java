@@ -1,5 +1,6 @@
 package wdm.project.service;
 
+import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -9,17 +10,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import wdm.project.dto.ItemInfo;
+import wdm.project.dto.JournalEntry;
+import wdm.project.dto.JournalEntryId;
 import wdm.project.dto.Order;
 import wdm.project.dto.OrderItem;
 import wdm.project.dto.OrderItemId;
 import wdm.project.dto.OrdersWrapper;
+import wdm.project.enums.Event;
+import wdm.project.enums.Status;
 import wdm.project.exception.OrderException;
+import wdm.project.repository.JournalRepository;
 import wdm.project.repository.OrdersItemsRepository;
 import wdm.project.repository.OrdersRepository;
 import wdm.project.service.clients.PaymentsServiceClient;
 import wdm.project.service.clients.StocksServiceClient;
 
 @Service
+@Transactional
 public class OrdersService {
 
 	@Autowired
@@ -30,6 +37,8 @@ public class OrdersService {
     private OrdersRepository ordersRepository;
     @Autowired
     private OrdersItemsRepository ordersItemsRepository;
+    @Autowired
+    private JournalRepository journalRepository;
 
     /**
      * Initializes an order in the micro-service's database with zero
@@ -176,25 +185,62 @@ public class OrdersService {
      */
     public void checkoutOrder(Long orderId) throws OrderException {
         OrdersWrapper order = findOrder(orderId);
-        Integer price;
-        try {
-            price = stocksServiceClient.subtractItems(order.getOrderItems());
-        } catch (FeignException exception) {
-            if (exception.status() == 400) {
-                throw new OrderException(new String(exception.content()), HttpStatus.BAD_REQUEST);
-            } else {
-                throw new OrderException("Something went wrong when subtracting the stock.", HttpStatus.INTERNAL_SERVER_ERROR);
+        JournalEntry checkoutEntry;
+        JournalEntryId id = new JournalEntryId(orderId, Event.CHECKOUT);
+        if (journalRepository.existsById(id)) {
+            checkoutEntry = journalRepository.getOne(id);
+        } else {
+            checkoutEntry = new JournalEntry(id, Status.STOCK_PENDING, -1);
+        }
+        checkoutOrder(orderId, checkoutEntry, order);
+    }
+
+    private void checkoutOrder(Long orderId, JournalEntry checkoutEntry, OrdersWrapper order) throws OrderException {
+        Status status = Status.findStatusEnum(checkoutEntry.getStatus());
+        if (status == null) {
+            throw new OrderException("Status was not provided", HttpStatus.BAD_REQUEST);
+        }
+        switch (status) {
+            case SUCCESS: return;
+            case STOCK_FAILURE: throw new OrderException("The stock was not sufficient to check out order with order ID " + orderId, HttpStatus.BAD_REQUEST);
+            case PAYMENT_FAILURE: throw new OrderException("The credit of user " + order.getUserId() + " was not sufficient to pay " + checkoutEntry.getPrice(), HttpStatus.BAD_REQUEST);
+            case STOCK_PENDING: {
+                try {
+                    Integer price = stocksServiceClient.subtractItem(orderId, order.getOrderItems());
+                    checkoutEntry.setPrice(price);
+                    checkoutEntry.setStatus(Status.STOCK_SUCCESS);
+                } catch (FeignException exception) {
+                    if (exception.status() == 400) {
+                        checkoutEntry.setStatus(Status.STOCK_FAILURE);
+                    } else {
+                        throw new OrderException("Something went wrong when subtracting the item stock.");
+                    }
+                }
+                break;
+            }
+            case STOCK_SUCCESS: {
+                try {
+                    paymentsServiceClient.payOrder(orderId, order.getUserId(), checkoutEntry.getPrice());
+                    checkoutEntry.setStatus(Status.SUCCESS);
+                } catch (FeignException exception) {
+                    if (exception.status() == 400) {
+                        checkoutEntry.setStatus(Status.ROLLBACK_PENDING);
+                    } else {
+                        throw new OrderException("Something went wrong when attempting to reduce the credit.");
+                    }
+                }
+                break;
+            }
+            case ROLLBACK_PENDING: {
+                try {
+                    stocksServiceClient.addItems(orderId, order.getOrderItems());
+                    checkoutEntry.setStatus(Status.PAYMENT_FAILURE);
+                } catch (FeignException exception) {
+                    throw new OrderException("Something went wrong when attempting the rollback on the stock.");
+                }
             }
         }
-        try {
-            paymentsServiceClient.payOrder(orderId, order.getUserId(), price);
-        } catch (FeignException exception) {
-            if (exception.status() == 400) {
-                stocksServiceClient.addItems(order.getOrderItems());
-                throw new OrderException(new String(exception.content()), HttpStatus.BAD_REQUEST);
-            } else {
-                throw new OrderException("Something went wrong when paying the order.", HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-        }
+        journalRepository.save(checkoutEntry);
+        checkoutOrder(orderId, checkoutEntry, order);
     }
 }
