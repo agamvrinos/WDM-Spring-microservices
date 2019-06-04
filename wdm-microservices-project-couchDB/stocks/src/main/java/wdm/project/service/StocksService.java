@@ -185,17 +185,16 @@ public class StocksService {
                 item.setStock(currentStock + itemInfo.getAmount());
 
                 JournalEntry addEntry = getJournalEntry(transactionId + "-" + item.getId() +"-" + Event.ADD_STOCK);
+                addEntry.setStatus(Status.SUCCESS);
 
                 if(journalRepository.contains(addEntry.getId())){
                     if (journalRepository.get(addEntry.getId()).getStatus().equals(Status.PENDING.getValue())) {
                         // If it exists and is PENDING
-                        addEntry.setStatus(Status.SUCCESS);
                         stocksRepository.update(item);
                         journalRepository.update(addEntry);
                     }
                 }
                 else{
-                    addEntry.setStatus(Status.SUCCESS);
                     stocksRepository.update(item);
                     journalRepository.add(addEntry);
                 }
