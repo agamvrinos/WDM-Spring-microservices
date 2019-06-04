@@ -119,9 +119,10 @@ public class UsersService {
         User user = findUser(id);
         JournalEntry reduceEntry;
         String journalId = transactionId + "-" + Event.REDUCE_CREDIT;
+        List<JournalEntry> existsJournal = journalRepository.findJournal(journalId);
         // When true, the transaction has already been processed; either throw exception or do nothing
-        if (journalRepository.contains(journalId)) {
-            reduceEntry = journalRepository.get(journalId);
+        if (!existsJournal.isEmpty()) {
+            reduceEntry = existsJournal.get(0);
             if (reduceEntry.getStatus().equals(Status.FAILURE.getValue())) {
                 throw new UsersException("The reduction for transaction with ID " + transactionId + " has already failed before", HttpStatus.BAD_REQUEST);
             }
