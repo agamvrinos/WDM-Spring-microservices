@@ -2,7 +2,6 @@ package wdm.project.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.ektorp.support.CouchDbDocument;
-import org.ektorp.support.TypeDiscriminator;
 
 public class Item extends CouchDbDocument {
 
@@ -15,7 +14,12 @@ public class Item extends CouchDbDocument {
 	@JsonProperty("price")
 	private Integer price;
 
+	@JsonProperty("type")
+	private String type;
+
+
 	public Item() {
+		this.type = "object";
 	}
 
 	public String getTitle() {
@@ -41,6 +45,10 @@ public class Item extends CouchDbDocument {
 	public void setPrice(Integer price) {
 		this.price = price;
 	}
+
+	public String getType() { return type; }
+
+	public void setType(String type) { this.type = type; }
 
 	@Override
 	public String toString() {

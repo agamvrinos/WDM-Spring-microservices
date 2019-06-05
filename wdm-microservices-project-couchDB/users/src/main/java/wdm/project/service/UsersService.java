@@ -3,15 +3,23 @@ package wdm.project.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import wdm.project.dto.JournalEntry;
 import wdm.project.dto.User;
+import wdm.project.enums.Event;
+import wdm.project.enums.Status;
 import wdm.project.exception.UsersException;
+import wdm.project.repository.JournalRepository;
 import wdm.project.repository.UsersRepository;
+
+import java.util.List;
 
 @Service
 public class UsersService {
 
     @Autowired
     private UsersRepository usersRepository;
+    @Autowired
+    private JournalRepository journalRepository;
 
     /**
      * Creates a new user.
@@ -65,11 +73,11 @@ public class UsersService {
         if (id == null) {
             throw new UsersException("Id was not provided", HttpStatus.BAD_REQUEST);
         }
-        boolean existsUser = usersRepository.contains(id);
-        if (!existsUser) {
+        List<User> existsUser = usersRepository.findUser(id);
+        if (existsUser.isEmpty()) {
             throw new UsersException("There is no user with id \"" + id + "\"", HttpStatus.NOT_FOUND);
         }
-        return usersRepository.get(id);
+        return existsUser.get(0);
     }
 
     /**
@@ -107,14 +115,32 @@ public class UsersService {
      * @param amount the amount to remove from the existing credit
      * @throws UsersException in case the current credits are insufficient
      */
-    public void subtractCredit(String id, Integer amount) throws UsersException {
+    public void subtractCredit(String id, String transactionId, Integer amount) throws UsersException {
         User user = findUser(id);
-        Integer credit = user.getCredit();
-        if (amount > credit) {
-            throw new UsersException("Insufficient credit", HttpStatus.BAD_REQUEST);
-        } else {
-            user.setCredit(credit - amount);
-            usersRepository.update(user);
+        JournalEntry reduceEntry;
+        String journalId = transactionId + "-" + Event.REDUCE_CREDIT;
+        List<JournalEntry> existsJournal = journalRepository.findJournal(journalId);
+        // When true, the transaction has already been processed; either throw exception or do nothing
+        if (!existsJournal.isEmpty()) {
+            reduceEntry = existsJournal.get(0);
+            if (reduceEntry.getStatus().equals(Status.FAILURE.getValue())) {
+                throw new UsersException("The reduction for transaction with ID " + transactionId + " has already failed before", HttpStatus.BAD_REQUEST);
+            }
+        }
+        // Not processed, process the transaction.
+        else {
+            reduceEntry = new JournalEntry(journalId, Status.PENDING);
+            Integer credit = user.getCredit();
+            if (amount > credit) {
+                reduceEntry.setStatus(Status.FAILURE);
+                journalRepository.update(reduceEntry);
+                throw new UsersException("Insufficient credit", HttpStatus.BAD_REQUEST);
+            } else {
+                user.setCredit(credit - amount);
+                usersRepository.update(user);
+                reduceEntry.setStatus(Status.SUCCESS);
+                journalRepository.update(reduceEntry);
+            }
         }
     }
 }

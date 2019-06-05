@@ -69,7 +69,7 @@ public class PaymentsService {
         }
 
         try {
-            usersServiceClient.subtractCredit(userId, totalPrice);
+            usersServiceClient.subtractCredit(userId, orderId, totalPrice);
             payment.setStatus("SUCCESS");
         } catch (FeignException exception) {
             if (exception.status() == 400) {
