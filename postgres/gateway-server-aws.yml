@@ -18,6 +18,7 @@ zuul:
 eureka:
   instance:
     preferIpAddress: true
+    ip-address: $DOCKER_HOST_IP
   client:
     serviceUrl:
         defaultZone: ${EUREKA_URI:http://localhost:8761/eureka}
