@@ -57,8 +57,8 @@ public class PaymentsService {
      */
     public Payment payOrder(Long orderId, Long userId, Integer totalPrice) throws PaymentException {
         Payment payment;
-        if (paymentsRepository.existsById(orderId)) {
-            payment = paymentsRepository.getOne(orderId);
+        if (paymentsRepository.existsByOrderId(orderId)) {
+            return paymentsRepository.findByOrderId(orderId);
         } else {
             payment = new Payment();
             payment.setOrderId(orderId);
@@ -66,7 +66,7 @@ public class PaymentsService {
         }
 
         try {
-            usersServiceClient.subtractCredit(orderId, totalPrice);
+            usersServiceClient.subtractCredit(userId, totalPrice);
             payment.setStatus("SUCCESS");
         } catch (FeignException exception) {
             if (exception.status() == 400) {
