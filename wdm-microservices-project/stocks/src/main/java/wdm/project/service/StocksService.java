@@ -1,12 +1,13 @@
 package wdm.project.service;
 
-import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import wdm.project.dto.Item;
 import wdm.project.dto.JournalEntry;
 import wdm.project.dto.JournalEntryId;
@@ -18,9 +19,11 @@ import wdm.project.repository.JournalRepository;
 import wdm.project.repository.StocksRepository;
 
 @Service
-@Transactional
+@Transactional(propagation = Propagation.REQUIRED, rollbackFor = StockException.class)
 public class StocksService {
 
+    @Autowired
+    private EventService eventService;
     @Autowired
     private StocksRepository stocksRepository;
     @Autowired
@@ -97,32 +100,43 @@ public class StocksService {
      * found or the stock is insufficient.
      */
     public Integer subtractItems(Long transactionId, List<ItemInfo> itemInfos) throws StockException {
-        JournalEntry subtractEntry = getJournalEntry(new JournalEntryId(transactionId, Event.SUBTRACT_STOCK));
-        if (subtractEntry.getStatus().equals(Status.FAILURE.getValue())) {
+        JournalEntryId journalEntryId = new JournalEntryId(transactionId, Event.SUBTRACT_STOCK);
+        JournalEntry subtractEntry = eventService.getJournalEntry(journalEntryId);
+
+        Status status = Status.findStatusEnum(subtractEntry.getStatus());
+
+        if (status == Status.FAILURE) {
             throw new StockException("The stock could not be reduced for transaction with ID " + transactionId + ".", HttpStatus.BAD_REQUEST);
-        } else if (subtractEntry.getStatus().equals(Status.SUCCESS.getValue())) {
+        } else if (status == Status.SUCCESS) {
             return subtractEntry.getPrice();
-        } else {
-            List<Item> items = new ArrayList<>();
+        } else if (status == Status.PENDING) {
             int totalPrice = 0;
+            boolean invalidOperation = false;
+            List<Item> items = new ArrayList<>();
+
             for (ItemInfo itemInfo : itemInfos) {
                 Item item = getItem(itemInfo.getId());
                 Integer currentStock = item.getStock();
+
                 if (itemInfo.getAmount() > currentStock) {
-                    subtractEntry.setStatus(Status.FAILURE);
-                    journalRepository.save(subtractEntry);
-                    throw new StockException("The stock of item ID " + itemInfo.getId() + " is " + currentStock +
-                                             " and can therefore not be reduced by " + itemInfo.getAmount() + ".", HttpStatus.BAD_REQUEST);
+                    invalidOperation = true;
+                    break;
                 }
                 item.setStock(currentStock - itemInfo.getAmount());
                 items.add(item);
                 totalPrice += itemInfo.getAmount() * item.getPrice();
             }
-            stocksRepository.saveAll(items);
-            subtractEntry.setStatus(Status.SUCCESS);
-            subtractEntry.setPrice(totalPrice);
-            journalRepository.save(subtractEntry);
+            if (invalidOperation) {
+                eventService.saveEvent(journalEntryId, null, Status.FAILURE);
+                throw new StockException("Cannot subtract insufficient amount", HttpStatus.BAD_REQUEST);
+            } else {
+                stocksRepository.saveAll(items);
+                eventService.saveEvent(journalEntryId, totalPrice, Status.SUCCESS);
+            }
+
             return totalPrice;
+        } else {
+            throw new StockException("Unexpected Status value", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -134,8 +148,12 @@ public class StocksService {
      * @throws StockException when an item ID is not found
      */
     public void addItems(Long transactionId, List<ItemInfo> itemInfos) throws StockException {
-        JournalEntry addEntry = getJournalEntry(new JournalEntryId(transactionId, Event.ADD_STOCK));
-        if (addEntry.getStatus().equals(Status.PENDING)) {
+        JournalEntryId journalEntryId = new JournalEntryId(transactionId, Event.ADD_STOCK);
+        JournalEntry addEntry = eventService.getJournalEntry(journalEntryId);
+
+        Status status = Status.findStatusEnum(addEntry.getStatus());
+
+        if (status == Status.PENDING) {
             List<Item> items = new ArrayList<>();
             for (ItemInfo itemInfo : itemInfos) {
                 Item item = getItem(itemInfo.getId());
@@ -145,14 +163,6 @@ public class StocksService {
             stocksRepository.saveAll(items);
             addEntry.setStatus(Status.SUCCESS);
             journalRepository.save(addEntry);
-        }
-    }
-
-    private JournalEntry getJournalEntry(JournalEntryId id) {
-        if (journalRepository.existsById(id)) {
-            return journalRepository.getOne(id);
-        } else {
-            return new JournalEntry(id, Status.PENDING, -1);
         }
     }
 }
