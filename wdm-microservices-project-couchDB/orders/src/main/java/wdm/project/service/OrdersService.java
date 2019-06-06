@@ -7,9 +7,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import wdm.project.dto.ItemInfo;
+import wdm.project.dto.JournalEntry;
 import wdm.project.dto.Order;
 import wdm.project.dto.OrdersWrapper;
+import wdm.project.enums.Event;
+import wdm.project.enums.Status;
 import wdm.project.exception.OrderException;
+import wdm.project.repository.JournalRepository;
 import wdm.project.repository.OrderRepository;
 import wdm.project.service.clients.PaymentsServiceClient;
 import wdm.project.service.clients.StocksServiceClient;
@@ -23,6 +27,8 @@ public class OrdersService {
 	private PaymentsServiceClient paymentsServiceClient;
     @Autowired
     private OrderRepository ordersRepository;
+    @Autowired
+    private JournalRepository journalRepository;
 
     /**
      * Initializes an order in the micro-service's database with zero
@@ -53,8 +59,11 @@ public class OrdersService {
      * @throws OrderException when the order with the provided ID is not found
      */
     public void removeOrder(String orderId) throws OrderException {
-        if (ordersRepository.contains(orderId)) {
-            Order storedOrder = ordersRepository.get(orderId);
+
+        List<Order> orders = ordersRepository.findOrder(orderId);
+
+        if (!orders.isEmpty()) {
+            Order storedOrder = orders.get(0);
             ordersRepository.remove(storedOrder);
         } else {
             throw new OrderException("There is no order with ID " + orderId + ".", HttpStatus.NOT_FOUND);
@@ -75,11 +84,14 @@ public class OrdersService {
 		if (orderId == null) {
 			throw new OrderException("The order id was not provided");
 		}
-		if (!ordersRepository.contains(orderId)){
+
+        List<Order> orders = ordersRepository.findOrder(orderId);
+
+		if (orders.isEmpty()){
             throw new OrderException("The order does not exist");
         }
 
-        Order order  = ordersRepository.get(orderId);
+        Order order  = orders.get(0);
         OrdersWrapper ordersWrapper = new OrdersWrapper();
         ordersWrapper.setOrderItems(order.getOrderItems());
         ordersWrapper.setPaymentStatus(paymentsServiceClient.getPaymentStatus(orderId));
@@ -107,7 +119,7 @@ public class OrdersService {
             throw new OrderException("There is no item with id \"" + itemId + "\"");
         }
 
-	    Order storedOrder = ordersRepository.get(orderId);
+	    Order storedOrder = ordersRepository.findOrder(orderId).get(0);
 	    List<ItemInfo> storedItems =  storedOrder.getOrderItems();
 
 	    boolean storedFlag = false;
@@ -144,8 +156,10 @@ public class OrdersService {
 
         checkItems(orderId, itemId);
 
-        if (ordersRepository.contains(orderId)){
-            Order storedOrder = ordersRepository.get(orderId);
+        List<Order> orders = ordersRepository.findOrder(orderId);
+
+        if (!orders.isEmpty()){
+            Order storedOrder = orders.get(0);
             List<ItemInfo> storedItems =  storedOrder.getOrderItems();
 
             for (ItemInfo storedItem : storedItems) {
@@ -164,22 +178,75 @@ public class OrdersService {
      * Checks-out an order invoking every other micro-service.
      *
      * @param orderId the id of order
-     * @return the status of the transaction SUCCESS for a
      * successful transaction
      * FAILURE for a failed transaction.
      */
     public void  checkoutOrder(String orderId) throws OrderException {
         OrdersWrapper order = findOrder(orderId);
-        try {
-            Integer price = stocksServiceClient.subtractItems(order.getOrderItems());
-            paymentsServiceClient.payOrder(orderId, order.getUserId(), price);
-        } catch (FeignException exception) {
-            if (exception.status() == 400) {
-                throw new OrderException("One of the item IDs was not found", HttpStatus.NOT_FOUND);
-            } else {
-                throw new OrderException("Something went wrong when handling the checkout", HttpStatus.INTERNAL_SERVER_ERROR);
+        JournalEntry checkoutEntry;
+        String id = orderId + "-" + Event.CHECKOUT;
+
+        List<JournalEntry> journalEntries = journalRepository.findJournal(id);
+
+        if (!journalEntries.isEmpty()) {
+            checkoutEntry = journalEntries.get(0);
+        } else {
+            checkoutEntry = new JournalEntry(id, Status.STOCK_PENDING, -1);
+        }
+        checkoutOrder(orderId, checkoutEntry, order);
+    }
+
+    private void checkoutOrder(String orderId, JournalEntry checkoutEntry, OrdersWrapper order) throws OrderException {
+        switch (Status.findStatusEnum(checkoutEntry.getStatus())) {
+            case SUCCESS: return;
+            case STOCK_FAILURE: throw new OrderException("The stock was not sufficient to check out order with order ID " + orderId, HttpStatus.BAD_REQUEST);
+            case PAYMENT_FAILURE: throw new OrderException("The credit of user " + order.getUserId() + " was not sufficient to pay " + checkoutEntry.getPrice(), HttpStatus.BAD_REQUEST);
+            case STOCK_PENDING: {
+                try {
+                    Integer price = stocksServiceClient.subtractItems(orderId, order.getOrderItems());
+                    checkoutEntry.setPrice(price);
+                    checkoutEntry.setStatus(Status.STOCK_SUCCESS);
+                } catch (FeignException exception) {
+                    if (exception.status() == 400) {
+                        checkoutEntry.setStatus(Status.STOCK_FAILURE);
+                    } else {
+                        throw new OrderException("Something went wrong when subtracting the item stock.");
+                    }
+                }
+                break;
+            }
+            case STOCK_SUCCESS: {
+                try {
+                    paymentsServiceClient.payOrder(orderId, order.getUserId(), checkoutEntry.getPrice());
+                    checkoutEntry.setStatus(Status.SUCCESS);
+                } catch (FeignException exception) {
+                    if (exception.status() == 400) {
+                        checkoutEntry.setStatus(Status.ROLLBACK_PENDING);
+                    } else {
+                        throw new OrderException("Something went wrong when attempting to reduce the credit.");
+                    }
+                }
+                break;
+            }
+            case ROLLBACK_PENDING: {
+                try {
+                    stocksServiceClient.addItems(orderId, order.getOrderItems());
+                    checkoutEntry.setStatus(Status.PAYMENT_FAILURE);
+                } catch (FeignException exception) {
+                    throw new OrderException("Something went wrong when attempting the rollback on the stock.");
+                }
             }
         }
+
+        // Update already existing checkout entry document
+        if (!journalRepository.findJournal(checkoutEntry.getId()).isEmpty()) {
+            journalRepository.update(checkoutEntry);
+        }
+        // If it does not exist, create a new one
+        else {
+            journalRepository.add(checkoutEntry);
+        }
+        checkoutOrder(orderId, checkoutEntry, order);
     }
 
     private void checkItems(String orderId, String itemId)throws OrderException{
@@ -189,8 +256,8 @@ public class OrdersService {
         if (itemId == null) {
             throw new OrderException("Item id was not provided");
         }
-        boolean existsOrder = ordersRepository.contains(orderId);
-        if (!existsOrder) {
+        boolean existsOrder = ordersRepository.findOrder(orderId).isEmpty();
+        if (existsOrder) {
             throw new OrderException("There is no order with it \"" + orderId + "\"");
         }
     }

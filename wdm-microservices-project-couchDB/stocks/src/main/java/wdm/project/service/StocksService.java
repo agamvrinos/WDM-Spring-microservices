@@ -4,8 +4,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import wdm.project.dto.Item;
+import wdm.project.dto.JournalEntry;
 import wdm.project.dto.remote.ItemInfo;
+import wdm.project.enums.Event;
+import wdm.project.enums.Status;
 import wdm.project.exception.StockException;
+import wdm.project.repository.JournalRepository;
 import wdm.project.repository.StocksRepository;
 
 import java.util.List;
@@ -15,6 +19,9 @@ public class StocksService {
 
     @Autowired
     private StocksRepository stocksRepository;
+
+    @Autowired
+    private JournalRepository journalRepository;
 
     /**
      * Returns the Item instance with the provided id.
@@ -27,11 +34,13 @@ public class StocksService {
         if (itemId == null) {
             throw new StockException("Provided item ID was null. Please provide a valid ID.", HttpStatus.BAD_REQUEST);
         }
-        boolean existsStocks = stocksRepository.contains(itemId);
-        if (!existsStocks) {
+
+        List<Item> items = stocksRepository.findItem(itemId);
+        boolean existsStocks = items.isEmpty();
+        if (existsStocks) {
             throw new StockException("The item with ID " + itemId + " was not found.", HttpStatus.NOT_FOUND);
         }
-        return stocksRepository.get(itemId);
+        return items.get(0);
     }
 
     /**
@@ -101,39 +110,127 @@ public class StocksService {
     /**
      * Subtracts stock from the Item instance with the provided id.
      *
+     * @param transactionId the ID of the transaction to remove the stock for
      * @param itemInfos item informations for all items which have to be subtracted.
      * @return the total price of all subtracted items
      * @throws StockException when the item with the provided ID is not
      * found or the stock is insufficient.
      */
-    public Integer subtractItems(List<ItemInfo> itemInfos) throws StockException {
-        int totalPrice = 0;
-        int idxOfFailure = 0;
-        for(ItemInfo itemInfo: itemInfos) {
-            Item item = getItem(itemInfo.getId());
-            Integer currentStock = item.getStock();
-            if (itemInfo.getAmount() > currentStock) {
-                rollbackItemSubtraction(itemInfos, idxOfFailure);
-                throw new StockException("The stock of item ID " + itemInfo.getId() + " is " + currentStock +
-                        " and can therefore not be reduced by " + itemInfo.getAmount() + ".", HttpStatus.BAD_REQUEST);
+    public Integer subtractItems(String transactionId, List<ItemInfo> itemInfos) throws StockException {
+
+            int totalPrice = 0;
+            int idxOfFailure = 0;
+
+            for (ItemInfo itemInfo : itemInfos) {
+
+                Item item = getItem(itemInfo.getId());
+                Integer currentStock = item.getStock();
+                JournalEntry subtractEntry = getJournalEntry(transactionId + "-"+ item.getId() +"-" + Event.SUBTRACT_STOCK);
+
+                List<JournalEntry> journalEntries = journalRepository.findJournal(subtractEntry.getId());
+
+                if (!journalEntries.isEmpty()) {
+                // If entry exists cases
+                    String status = journalEntries.get(0).getStatus();
+
+                    if (status.equals(Status.PENDING.getValue())) {
+                        // If entry exists and is pending
+                        if (itemInfo.getAmount() > currentStock) {
+                            subtractEntry.setStatus(Status.FAILURE);
+                            journalRepository.update(subtractEntry);
+                            rollbackItemSubtraction(transactionId, itemInfos, idxOfFailure);
+                            throw new StockException("The stock of item ID " + itemInfo.getId() + " is " + currentStock +
+                                    " and can therefore not be reduced by " + itemInfo.getAmount() + ".", HttpStatus.BAD_REQUEST);
+                        }
+                        item.setStock(currentStock - itemInfo.getAmount());
+                        totalPrice += itemInfo.getAmount() * item.getPrice();
+                        subtractEntry.setStatus(Status.SUCCESS);
+                        journalRepository.update(subtractEntry);
+                        stocksRepository.update(item);
+                    }
+                    else if (status.equals(Status.FAILURE.getValue())){
+                        //If it has failed, rollback from the previous index
+                        rollbackItemSubtraction(transactionId, itemInfos, idxOfFailure-1);
+                    }
+                }else{
+                    if (itemInfo.getAmount() > currentStock) {
+                        subtractEntry.setStatus(Status.FAILURE);
+                        journalRepository.add(subtractEntry);
+                        rollbackItemSubtraction(transactionId, itemInfos, idxOfFailure);
+                        throw new StockException("The stock of item ID " + itemInfo.getId() + " is " + currentStock +
+                                " and can therefore not be reduced by " + itemInfo.getAmount() + ".", HttpStatus.BAD_REQUEST);
+                    }
+                    item.setStock(currentStock - itemInfo.getAmount());
+                    totalPrice += itemInfo.getAmount() * item.getPrice();
+                    subtractEntry.setStatus(Status.SUCCESS);
+                    journalRepository.add(subtractEntry);
+                    stocksRepository.update(item);
+
+                }
+                idxOfFailure++;
             }
-            item.setStock(currentStock - itemInfo.getAmount());
-            totalPrice += itemInfo.getAmount() * item.getPrice();
-            stocksRepository.update(item);
-            idxOfFailure++;
-        }
-        return totalPrice;
+            return totalPrice;
     }
 
-    private void rollbackItemSubtraction(List<ItemInfo> itemInfos, int idxOfFailure) throws StockException {
+    /**
+     *
+     * Adds stock from the item with the provided IDs.
+     *
+     * @param transactionId the ID of the transaction to add the stock for
+     * @param itemInfos the item IDs with the amount of stock to add
+     * @throws StockException when an item ID is not found
+     */
+    public void addItems(String transactionId, List<ItemInfo> itemInfos) throws StockException {
+
+            for (ItemInfo itemInfo : itemInfos) {
+
+                Item item = getItem(itemInfo.getId());
+                Integer currentStock = item.getStock();
+                item.setStock(currentStock + itemInfo.getAmount());
+
+                JournalEntry addEntry = getJournalEntry(transactionId + "-" + item.getId() +"-" + Event.ADD_STOCK);
+                addEntry.setStatus(Status.SUCCESS);
+
+                List<JournalEntry> journalEntries = journalRepository.findJournal(addEntry.getId());
+
+                if(!journalEntries.isEmpty()){
+                    if (journalEntries.get(0).getStatus().equals(Status.PENDING.getValue())) {
+                        // If it exists and is PENDING
+                        stocksRepository.update(item);
+                        journalRepository.update(addEntry);
+                    }
+                }
+                else{
+                    stocksRepository.update(item);
+                    journalRepository.add(addEntry);
+                }
+            }
+    }
+
+    private void rollbackItemSubtraction(String transactionId, List<ItemInfo> itemInfos, int idxOfFailure) throws StockException {
+
         for(int i = 0; i < idxOfFailure; i++) {
             ItemInfo itemInfo = itemInfos.get(i);
-
             Item item = getItem(itemInfo.getId());
+            JournalEntry rollbackEntry = getJournalEntry(transactionId + "-"+ item.getId() +"-" + Event.SUBTRACT_STOCK);
+            rollbackEntry.setStatus(Status.FAILURE);
             Integer currentStock = item.getStock();
-
             item.setStock(currentStock + itemInfo.getAmount());
+            journalRepository.update(rollbackEntry);
             stocksRepository.update(item);
+        }
+    }
+
+    private JournalEntry getJournalEntry(String id) {
+
+        List<JournalEntry> journalEntries = journalRepository.findJournal(id);
+
+        if (!journalEntries.isEmpty()) {
+            JournalEntry journalEntry = journalEntries.get(0);
+            journalEntry.setId(id);
+            return journalEntry;
+        } else {
+            return new JournalEntry(id, Status.PENDING);
         }
     }
 }

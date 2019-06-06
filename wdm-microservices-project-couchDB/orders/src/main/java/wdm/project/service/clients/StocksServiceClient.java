@@ -1,5 +1,7 @@
 package wdm.project.service.clients;
 
+import java.util.List;
+
 import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -7,8 +9,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import wdm.project.dto.ItemInfo;
 import wdm.project.dto.remote.Item;
-
-import java.util.List;
 
 @FeignClient(name = "stocks-service")
 public interface StocksServiceClient {
@@ -28,6 +28,9 @@ public interface StocksServiceClient {
 	@PostMapping("/stock/subtract/{item_id}/{number}")
 	void subtractItem(@PathVariable("item_id") String itemId, @PathVariable("number") Integer itemNumber);
 
-	@PostMapping("/stock/subtract")
-	Integer subtractItems(@RequestBody List<ItemInfo> itemInfos);
+	@PostMapping("/stock/subtract/{transaction_id}")
+	Integer subtractItems(@PathVariable("transaction_id") String transactionId, @RequestBody List<ItemInfo> itemInfos);
+
+	@PostMapping("/stock/add/{transaction_id}")
+	void addItems(@PathVariable("transaction_id") String transactionId, @RequestBody List<ItemInfo> items);
 }
