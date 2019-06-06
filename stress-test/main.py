@@ -13,10 +13,9 @@ class User(TaskSet):
         self.item_ids = list()
 
     def on_start(self):
-        with open("user_id.pickle", "rb") as user_id_file:
+        with open("user_ids.pickle", "rb") as user_id_file:
             self.user_ids = pickle.load(user_id_file)
-            print(self.user_ids)
-        with open("item_id.pickle", "rb") as item_id_file:
+        with open("item_ids.pickle", "rb") as item_id_file:
             self.item_ids = pickle.load(item_id_file)
         self._get_new_order()
 
