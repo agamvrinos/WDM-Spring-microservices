@@ -1,0 +1,5 @@
+eureka:
+  instance:
+    preferIpAddress: true
+    hostname: 8.8.8.8
+    ip-address: 8.8.8.8
