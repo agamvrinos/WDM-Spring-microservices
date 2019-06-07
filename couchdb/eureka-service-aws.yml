@@ -1,5 +1,6 @@
 eureka:
   instance:
+    # not sure what this is for
     hostname: localhost
   client:
     register-with-eureka: false

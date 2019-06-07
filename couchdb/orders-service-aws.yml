@@ -1,12 +1,15 @@
 server:
   port: 8080
 eureka:
+  instance:
+    preferIpAddress: true
+    ip-address: ${DOCKER_HOST_IP}
   client:
     serviceUrl:
-      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka}
+      defaultZone: ${EUREKA_URI}
 couchdb:
   username: wdm
   password: wdm-2019
   database: orders
-  host: $COUCH_URI
+  host: ${COUCH_URI}
   port: 5984
