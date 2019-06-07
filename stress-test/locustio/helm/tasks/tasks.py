@@ -91,8 +91,8 @@ events.slave_report += slave_report_handler
 
 success_filename = "success.csv"
 with open(success_filename, "w+") as success_csv:
-    success_csv.write("start_time,request_type,name,response_time\n")
+    success_csv.write("start_time;method;endpoint;response_time\n")
 
 failure_filename = "failure.csv"
 with open(failure_filename, "w+") as failure_csv:
-    failure_csv.write("start_time,request_type,name,exception\n")
+    failure_csv.write("start_time;method;endpoint;exception\n")
