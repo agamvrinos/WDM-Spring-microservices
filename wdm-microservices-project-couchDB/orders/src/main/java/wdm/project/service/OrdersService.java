@@ -184,7 +184,7 @@ public class OrdersService {
             price = stocksServiceClient.subtractItems(order.getOrderItems());
         } catch (FeignException exception) {
             if (exception.status() == 400) {
-                throw new OrderException("One of the item IDs was not found", HttpStatus.BAD_REQUEST);
+                throw new OrderException("Insufficient stock", HttpStatus.BAD_REQUEST);
             } else {
                 throw new OrderException("Something went wrong when subtracting the stock.", HttpStatus.INTERNAL_SERVER_ERROR);
             }
@@ -194,7 +194,7 @@ public class OrdersService {
         } catch (FeignException exception) {
             if (exception.status() == 400) {
                 stocksServiceClient.addItems(order.getOrderItems());
-                throw new OrderException("Something went wrong when handling the checkout", HttpStatus.BAD_REQUEST);
+                throw new OrderException("Not enough credit", HttpStatus.BAD_REQUEST);
             } else {
                 throw new OrderException("Something went wrong when paying the order.", HttpStatus.INTERNAL_SERVER_ERROR);
             }
