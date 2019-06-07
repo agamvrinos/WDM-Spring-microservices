@@ -4,6 +4,7 @@ import feign.FeignException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import wdm.project.dto.Payment;
 import wdm.project.enums.Status;
 import wdm.project.exception.PaymentException;
@@ -11,6 +12,7 @@ import wdm.project.repository.PaymentsRepository;
 import wdm.project.service.clients.UsersServiceClient;
 
 @Service
+@Transactional(rollbackFor = PaymentException.class)
 public class PaymentsService {
 
     @Autowired

@@ -3,11 +3,13 @@ package wdm.project.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import wdm.project.dto.User;
 import wdm.project.exception.UsersException;
 import wdm.project.repository.UsersRepository;
 
 @Service
+@Transactional(rollbackFor = UsersException.class)
 public class UsersService {
 
     @Autowired
