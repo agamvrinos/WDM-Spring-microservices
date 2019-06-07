@@ -1,5 +1,8 @@
 #!/bin/sh
 
+export DOCKER_HOST_IP=$(curl --retry 3 --connect-timeout 2 --max-time 2  -s http://api.ipify.org)
+echo "$DOCKER_HOST_IP"
+
 echo "********************************************************"
 echo "Waiting for the configuration server to start on port 8888"
 echo "********************************************************"
