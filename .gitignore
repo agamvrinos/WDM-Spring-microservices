@@ -27,6 +27,7 @@ wdm-microservices-project/users/target
 wdm-microservices-project/orders/target
 wdm-microservices-project/payments/target
 wdm-microservices-project/stocks/target
+wdm-microservices-project/config-service/target
 wdm-microservices-project/eureka/target
 wdm-microservices-project/config-service/target
 wdm-microservices-project/gateway/target

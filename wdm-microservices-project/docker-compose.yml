@@ -1,0 +1,67 @@
+# this compose file is for local deployment only,
+# where a postgres instance is already created and running
+# NOTE: using host.docker.internal to resolve localhost ip apparently only works on Mac/Windows Docker
+
+version: "3.7"
+services:
+
+  config-service:
+    image: wdm/config
+    ports:
+      - "8888:8888"
+
+  eureka-service:
+    image: wdm/eureka
+    ports:
+      - "8761:8761"
+    environment:
+        CONFIG_URI: "http://config-service:8888"
+
+  gateway-service:
+    image: wdm/orders
+    ports:
+      - "8086:8086"
+    environment:
+      PROFILE: "local"
+      CONFIG_URI: "http://config-service:8888"
+      EUREKA_URI: "http://eureka-service:8761/eureka"
+
+  orders-service:
+    image: wdm/orders
+    ports:
+      - "8080:8080"
+    environment:
+        PROFILE: "local"
+        CONFIG_URI: "http://config-service:8888"
+        EUREKA_URI: "http://eureka-service:8761/eureka"
+        DB_URI: "jdbc:postgresql://host.docker.internal:5432"
+
+  payments-service:
+    image: wdm/payments
+    ports:
+      - "8081:8081"
+    environment:
+        PROFILE: "local"
+        CONFIG_URI: "http://config-service:8888"
+        EUREKA_URI: "http://eureka-service:8761/eureka"
+        DB_URI: "jdbc:postgresql://host.docker.internal:5432"
+
+  stocks-service:
+    image: wdm/stocks
+    ports:
+      - "8082:8082"
+    environment:
+        PROFILE: "local"
+        CONFIG_URI: "http://config-service:8888"
+        EUREKA_URI: "http://eureka-service:8761/eureka"
+        DB_URI: "jdbc:postgresql://host.docker.internal:5432"
+
+  users-service:
+    image: wdm/users
+    ports:
+      - "8083:8083"
+    environment:
+        PROFILE: "local"
+        CONFIG_URI: "http://config-service:8888"
+        EUREKA_URI: "http://eureka-service:8761/eureka"
+        DB_URI: "jdbc:postgresql://host.docker.internal:5432"
