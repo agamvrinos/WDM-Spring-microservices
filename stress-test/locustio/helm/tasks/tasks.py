@@ -19,13 +19,15 @@ class User(TaskSet):
             self.item_ids = pickle.load(item_id_file)
         self._get_new_order()
 
-    def _get_new_order(self):
-        with self.client.post(
-                url=f"/api/orders/orders/create/{random.choice(self.user_ids)}",
-                name="/api/orders/orders/create/{user_id}",
-                catch_response=True) as create_response:
-            if create_response.status_code == 200:
-                self.order_id = create_response.json()
+    def _get_new_order(self, previous_id=0):
+        while self.order_id == previous_id:
+            with self.client.post(
+                    url=f"/api/orders/orders/create/{random.choice(self.user_ids)}",
+                    name="/api/orders/orders/create/{user_id}",
+                    catch_response=True) as create_response:
+                if create_response.status_code == 200:
+                    self.order_id = create_response.json()
+                    break
 
     @task(10)
     def add_item(self):
