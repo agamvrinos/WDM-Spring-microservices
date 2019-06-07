@@ -63,7 +63,6 @@ public class OrdersService {
      */
     public void removeOrder(Long orderId) throws OrderException {
         if (ordersRepository.existsById(orderId)) {
-        	//FIXME: This needs to be changed!!
             ordersItemsRepository.deleteById_OrderId(orderId);
             ordersRepository.deleteById(orderId);
         } else {

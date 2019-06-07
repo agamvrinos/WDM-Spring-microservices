@@ -81,26 +81,6 @@ public class StocksService {
     /**
      * Subtracts stock from the Item instance with the provided id.
      *
-     * @param itemId the id of the Item, the stock of which is
-     * is going to be updated
-     * @param subtractedStock the stock to be subtracted
-     * @throws StockException when the item with the provided ID is not
-     * found or the stock is insufficient.
-     */
-    public void subtractItem(String itemId, Integer subtractedStock) throws StockException {
-        Item item = getItem(itemId);
-        Integer currentStock = item.getStock();
-        if (subtractedStock > currentStock) {
-            throw new StockException("The stock of item ID " + itemId + " is " + currentStock +
-                    " and can therefore not be reduced by " + subtractedStock + ".", HttpStatus.BAD_REQUEST);
-        }
-        item.setStock(currentStock - subtractedStock);
-        stocksRepository.update(item);
-    }
-
-    /**
-     * Subtracts stock from the Item instance with the provided id.
-     *
      * @param itemInfos item informations for all items which have to be subtracted.
      * @return the total price of all subtracted items
      * @throws StockException when the item with the provided ID is not
@@ -123,6 +103,21 @@ public class StocksService {
             idxOfFailure++;
         }
         return totalPrice;
+    }
+
+    /**
+     * Adds stock from the item with the provided IDs.
+     *
+     * @param itemInfos the item IDs with the amount of stock to add
+     * @throws StockException when an item ID is not found
+     */
+    public void addItems(List<ItemInfo> itemInfos) throws StockException {
+        for(ItemInfo itemInfo: itemInfos) {
+            Item item = getItem(itemInfo.getId());
+            Integer currentStock = item.getStock();
+            item.setStock(currentStock + itemInfo.getAmount());
+            stocksRepository.update(item);
+        }
     }
 
     private void rollbackItemSubtraction(List<ItemInfo> itemInfos, int idxOfFailure) throws StockException {

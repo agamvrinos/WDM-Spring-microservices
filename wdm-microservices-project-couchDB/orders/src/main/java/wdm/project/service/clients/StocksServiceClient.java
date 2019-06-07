@@ -30,4 +30,7 @@ public interface StocksServiceClient {
 
 	@PostMapping("/stock/subtract")
 	Integer subtractItems(@RequestBody List<ItemInfo> itemInfos);
+
+	@PostMapping("/stock/addItems")
+	void addItems(@RequestBody List<ItemInfo> items);
 }

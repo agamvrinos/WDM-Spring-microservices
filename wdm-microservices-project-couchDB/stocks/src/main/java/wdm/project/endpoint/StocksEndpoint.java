@@ -44,15 +44,13 @@ public class StocksEndpoint {
         stocksService.addItem(itemId, itemNumber);
     }
 
-    @PostMapping("/subtract/{item_id}/{number}")
-    public void subtractItem(@PathVariable("item_id") String itemId,
-                             @PathVariable("number") Integer itemNumber
-    ) throws StockException {
-        stocksService.subtractItem(itemId, itemNumber);
-    }
-
     @PostMapping("/subtract")
     public Integer subtractItems(@RequestBody List<ItemInfo> items) throws StockException {
         return stocksService.subtractItems(items);
+    }
+
+    @PostMapping("/addItems")
+    public void addItems(@RequestBody List<ItemInfo> items) throws StockException {
+        stocksService.addItems(items);
     }
 }

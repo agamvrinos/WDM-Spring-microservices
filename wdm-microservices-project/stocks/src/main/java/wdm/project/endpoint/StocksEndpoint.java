@@ -49,7 +49,7 @@ public class StocksEndpoint {
 	    return stocksService.subtractItems(items);
     }
 
-    @PostMapping("/add")
+    @PostMapping("/addItems")
     public void addItems(@RequestBody List<ItemInfo> items) throws StockException {
 	    stocksService.addItems(items);
     }

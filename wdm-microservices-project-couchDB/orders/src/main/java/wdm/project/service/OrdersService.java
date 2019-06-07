@@ -75,15 +75,24 @@ public class OrdersService {
 		if (orderId == null) {
 			throw new OrderException("The order id was not provided");
 		}
-		if (!ordersRepository.contains(orderId)){
+
+		Order order;
+
+		try{
+            order  = ordersRepository.get(orderId);
+        } catch (Exception exception) {
             throw new OrderException("The order does not exist");
         }
 
-        Order order  = ordersRepository.get(orderId);
         OrdersWrapper ordersWrapper = new OrdersWrapper();
-        ordersWrapper.setOrderItems(order.getOrderItems());
-        ordersWrapper.setPaymentStatus(paymentsServiceClient.getPaymentStatus(orderId));
-        ordersWrapper.setUserId(order.getUserId());
+
+        try {
+            ordersWrapper.setOrderItems(order.getOrderItems());
+            ordersWrapper.setPaymentStatus(paymentsServiceClient.getPaymentStatus(orderId));
+            ordersWrapper.setUserId(order.getUserId());
+        } catch (FeignException exception) {
+            throw new OrderException("Something went wrong while retrieving the payment status", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
 
         return ordersWrapper;
     }
@@ -170,14 +179,24 @@ public class OrdersService {
      */
     public void  checkoutOrder(String orderId) throws OrderException {
         OrdersWrapper order = findOrder(orderId);
+        Integer price;
         try {
-            Integer price = stocksServiceClient.subtractItems(order.getOrderItems());
+            price = stocksServiceClient.subtractItems(order.getOrderItems());
+        } catch (FeignException exception) {
+            if (exception.status() == 400) {
+                throw new OrderException("One of the item IDs was not found", HttpStatus.BAD_REQUEST);
+            } else {
+                throw new OrderException("Something went wrong when subtracting the stock.", HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        }
+        try {
             paymentsServiceClient.payOrder(orderId, order.getUserId(), price);
         } catch (FeignException exception) {
             if (exception.status() == 400) {
-                throw new OrderException("One of the item IDs was not found", HttpStatus.NOT_FOUND);
+                stocksServiceClient.addItems(order.getOrderItems());
+                throw new OrderException("Something went wrong when handling the checkout", HttpStatus.BAD_REQUEST);
             } else {
-                throw new OrderException("Something went wrong when handling the checkout", HttpStatus.INTERNAL_SERVER_ERROR);
+                throw new OrderException("Something went wrong when paying the order.", HttpStatus.INTERNAL_SERVER_ERROR);
             }
         }
     }
