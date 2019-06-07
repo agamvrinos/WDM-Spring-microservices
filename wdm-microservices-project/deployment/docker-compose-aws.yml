@@ -1,0 +1,111 @@
+# the compose file to use for full deployment to AWS (using ECS with ecs-cli)
+# the DB is hosted with AWS RDS, point the URI to it
+# docker images are pulled from dockerhub account/repo:service (needs to be public)
+
+version: "3"
+services:
+
+  config-service:
+    image: jannest/wdm:config
+    ports:
+      - "8888:8888"
+    logging:
+      driver: awslogs
+      options: 
+        awslogs-group: wdm-ecs
+        awslogs-region: us-east-1
+        awslogs-stream-prefix: config
+
+  eureka-service:
+    image: jannest/wdm:eureka
+    ports:
+      - "8761:8761"
+    environment:
+        CONFIG_URI: "http://config-service:8888"
+    logging:
+      driver: awslogs
+      options: 
+        awslogs-group: wdm-ecs
+        awslogs-region: us-east-1
+        awslogs-stream-prefix: eureka
+
+  gateway-service:
+    image: jannest/wdm:gateway
+    ports:
+      - "8086:8086"
+    environment:
+      PROFILE: "local"
+      CONFIG_URI: "http://config-service:8888"
+      EUREKA_URI: "http://eureka-service:8761/eureka"
+    logging:
+      driver: awslogs
+      options: 
+        awslogs-group: wdm-ecs
+        awslogs-region: us-east-1
+        awslogs-stream-prefix: gateway
+
+  orders-service:
+    image: jannest/wdm:orders
+    ports:
+      - "8080:8080"
+    environment:
+        PROFILE: "aws"
+        CONFIG_URI: "http://config-service:8888"
+        EUREKA_URI: "http://eureka-service:8761/eureka"
+        DB_URI: "jdbc:postgresql://wdm-test.chan3zsfx6kz.us-east-1.rds.amazonaws.com:5432"
+    logging:
+      driver: awslogs
+      options: 
+        awslogs-group: wdm-ecs
+        awslogs-region: us-east-1
+        awslogs-stream-prefix: orders
+
+  payments-service:
+    image: jannest/wdm:payments
+    ports:
+      - "8081:8081"
+    environment:
+        PROFILE: "aws"
+        CONFIG_URI: "http://config-service:8888"
+        EUREKA_URI: "http://eureka-service:8761/eureka"
+        DB_URI: "jdbc:postgresql://wdm-test.chan3zsfx6kz.us-east-1.rds.amazonaws.com:5432"
+    logging:
+      driver: awslogs
+      options: 
+        awslogs-group: wdm-ecs
+        awslogs-region: us-east-1
+        awslogs-stream-prefix: payments
+
+  stocks-service:
+    image: jannest/wdm:stocks
+    ports:
+      - "8082:8082"
+    environment:
+        PROFILE: "aws"
+        CONFIG_URI: "http://config-service:8888"
+        EUREKA_URI: "http://eureka-service:8761/eureka"
+        DB_URI: "jdbc:postgresql://wdm-test.chan3zsfx6kz.us-east-1.rds.amazonaws.com:5432"
+    logging:
+      driver: awslogs
+      options: 
+        awslogs-group: wdm-ecs
+        awslogs-region: us-east-1
+        awslogs-stream-prefix: stocks
+
+  users-service:
+    image: jannest/wdm:users
+    ports:
+      - "8083:8083"
+    environment:
+        PROFILE: "aws"
+        CONFIG_URI: "http://config-service:8888"
+        EUREKA_URI: "http://eureka-service:8761/eureka"
+        DB_URI: "jdbc:postgresql://wdm-test.chan3zsfx6kz.us-east-1.rds.amazonaws.com:5432"
+    logging:
+      driver: awslogs
+      options: 
+        awslogs-group: wdm-ecs
+        awslogs-region: us-east-1
+        awslogs-stream-prefix: users
+
+
