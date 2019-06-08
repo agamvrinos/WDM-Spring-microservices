@@ -15,9 +15,11 @@ zuul:
     stock:
       path: /stock/**
       serviceId: stocks-service
-    ribbonIsolationStrategy: THREAD
+    host:
+      max-total-connections: 1000
+      max-per-route-connections: 100
     semaphore:
-      max-semaphores: 30000
+      max-semaphores: 500
 eureka:
   instance:
     preferIpAddress: true
@@ -27,7 +29,15 @@ eureka:
         defaultZone: ${EUREKA_URI:http://localhost:8761/eureka}
 
 ribbon:
-  ReadTimeout: 5000
-  ConnectTimeout: 5000
+  ReadTimeout: 90000
+  ConnectTimeout: 90000
   eureka:
     enabled: true
+
+hystrix:
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+              timeoutInMilliseconds: 1000000
