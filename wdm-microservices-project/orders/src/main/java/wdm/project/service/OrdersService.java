@@ -132,7 +132,7 @@ public class OrdersService {
 	    try {
 	        stocksServiceClient.getItem(itemId);
         } catch (FeignException exception) {
-	        throw new OrderException(exception.contentUTF8(), HttpStatus.resolve(exception.status()));
+	        throw new OrderException("GET ITEM FAILED: " + exception.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
         OrderItemId orderItemId = new OrderItemId(orderId, itemId);
