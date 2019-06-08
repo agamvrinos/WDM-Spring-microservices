@@ -6,7 +6,9 @@ Web Data Management (IN4331) 2019.
 
 ### Architecture
 
-<img src="https://github.com/agamvrinos/WDM-Spring-microservices/blob/readme/images/Overview.png" height="241" width="601">
+<p align="center">
+  <img src="https://github.com/agamvrinos/WDM-Spring-microservices/blob/readme/images/Overview.png" height="241" width="601">
+</p>
 
 * **Configuration service:** Used to distribute the configuration flies to the instances
 of the microservices. 
@@ -39,7 +41,9 @@ of the microservices.
 
 Our system is built to support the distributed transaction (checkout) where all the microservices need to communicate with each other as shown bellow (good weather setting). 
 
-<img src="https://github.com/agamvrinos/WDM-Spring-microservices/blob/readme/images/DistributedTransaction.png" height="383" width="536">
+<p align="center">
+ <img src="https://github.com/agamvrinos/WDM-Spring-microservices/blob/readme/images/DistributedTransaction.png" height="383" width="536">
+</p>
 
 #### Consistency (SAGA-like) ####
 The consistency of our system is based on the SAGA pattern of compensating actions 
