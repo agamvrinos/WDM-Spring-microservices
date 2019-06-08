@@ -17,7 +17,7 @@ zuul:
       serviceId: stocks-service
     ribbonIsolationStrategy: THREAD
     semaphore:
-      max-semaphores: 2000
+      max-semaphores: 30000
 eureka:
   instance:
     preferIpAddress: true
