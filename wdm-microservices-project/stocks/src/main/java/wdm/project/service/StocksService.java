@@ -13,7 +13,6 @@ import wdm.project.exception.StockException;
 import wdm.project.repository.StocksRepository;
 
 @Service
-@Transactional(rollbackFor = StockException.class)
 public class StocksService {
 
     @Autowired
@@ -73,6 +72,7 @@ public class StocksService {
      * @param additionalStock the stock to be added
      * @throws StockException when the item with the provided ID is not found.
      */
+    @Transactional(rollbackFor = StockException.class)
     public void addItem(Long itemId, Integer additionalStock) throws StockException {
         Item item = getItem(itemId);
         Integer currentStock = item.getStock();
@@ -88,6 +88,7 @@ public class StocksService {
      * @throws StockException when the item with the provided ID is not
      * found or the stock is insufficient.
      */
+    @Transactional(rollbackFor = StockException.class)
     public Integer subtractItems(List<ItemInfo> itemInfos) throws StockException {
         List<Item> items = new ArrayList<>();
         int totalPrice = 0;
@@ -112,6 +113,7 @@ public class StocksService {
      * @param itemInfos the item IDs with the amount of stock to add
      * @throws StockException when an item ID is not found
      */
+    @Transactional(rollbackFor = StockException.class)
     public void addItems(List<ItemInfo> itemInfos) throws StockException {
         List<Item> items = new ArrayList<>();
         for (ItemInfo itemInfo: itemInfos) {
