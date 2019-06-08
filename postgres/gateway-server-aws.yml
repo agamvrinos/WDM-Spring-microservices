@@ -31,3 +31,14 @@ hystrix:
           strategy: THREAD
           thread:
             timeoutInMilliseconds: 60000
+            
+zuul:
+  ribbonIsolationStrategy: THREAD
+  semaphore:
+    max-semaphores: 2000
+
+ribbon:
+  ReadTimeout: 5000
+  ConnectTimeout: 5000
+  eureka:
+    enabled: true
