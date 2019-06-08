@@ -1,12 +1,11 @@
 package wdm.project.service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import feign.FeignException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +23,7 @@ import wdm.project.service.clients.StocksServiceClient;
 
 @Service
 @Transactional(rollbackFor = OrderException.class)
+@CacheConfig(cacheNames={"orders"})
 public class OrdersService {
 
     @Autowired
@@ -34,8 +34,6 @@ public class OrdersService {
     private OrdersRepository ordersRepository;
     @Autowired
     private OrdersItemsRepository ordersItemsRepository;
-
-    private HashMap<Long, Item> itemCache = new HashMap<>();
 
     /**
      * Initializes an order in the micro-service's database with zero
@@ -132,12 +130,8 @@ public class OrdersService {
             throw new OrderException("There is no order with it \"" + orderId + "\"");
         }
 
-        if (!itemCache.containsKey(itemId)) {
-            try {
-                itemCache.put(itemId, stocksServiceClient.getItem(itemId));
-            } catch (FeignException exception) {
-                throw new OrderException("GET ITEM FAILED: " + exception.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-            }
+        if (!findAllItems().contains(itemId)) {
+            throw new OrderException("Item id does not exist: ", HttpStatus.NOT_FOUND);
         }
 
         OrderItemId orderItemId = new OrderItemId(orderId, itemId);
@@ -154,6 +148,11 @@ public class OrdersService {
             orderItem.setAmount(requestOrderItem.getAmount());
             ordersItemsRepository.save(orderItem);
         }
+    }
+
+    @Cacheable
+    public HashSet<Long> findAllItems(){
+        return new HashSet<>(stocksServiceClient.getAllItemIds());
     }
 
     /**

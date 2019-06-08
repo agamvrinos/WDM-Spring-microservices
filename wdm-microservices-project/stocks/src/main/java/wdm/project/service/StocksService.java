@@ -49,6 +49,11 @@ public class StocksService {
         return item.getStock();
     }
 
+    public List<Long> getAllItemIds(){
+        stocksRepository.getAllItemIds();
+        return null;
+    }
+
     /**
      * Creates a new Item based on the provided
      * {@code requestItem}.

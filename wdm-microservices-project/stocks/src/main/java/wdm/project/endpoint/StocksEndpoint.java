@@ -26,6 +26,11 @@ public class StocksEndpoint {
         return stocksService.getItem(itemId);
     }
 
+    @GetMapping("/getAllItems")
+    public List<Long> getAllItemIds(){
+        return stocksService.getAllItemIds();
+    }
+
     @GetMapping("/availability/{id}")
     public Integer getItemAvailability(@PathVariable("id") Long itemId) throws StockException{
         return stocksService.getItemAvailability(itemId);

@@ -1,10 +1,13 @@
 package wdm.project.service;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 import feign.FeignException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import wdm.project.dto.ItemInfo;
@@ -17,6 +20,7 @@ import wdm.project.service.clients.PaymentsServiceClient;
 import wdm.project.service.clients.StocksServiceClient;
 
 @Service
+@CacheConfig(cacheNames={"orders"})
 public class OrdersService {
 
     @Autowired
@@ -113,14 +117,10 @@ public class OrdersService {
 
         checkItems(orderId, itemId);
 
-        if (!itemCache.containsKey(itemId)) {
-            try {
-                itemCache.put(itemId, stocksServiceClient.getItem(itemId));
-            } catch (FeignException exception) {
-                throw new OrderException("There is no item with id \"" + itemId + "\"");
-            }
+        if (!findAllItems().contains(itemId)) {
+            throw new OrderException("Item id does not exist: ", HttpStatus.NOT_FOUND);
         }
-        
+
         Order storedOrder = ordersRepository.get(orderId);
         List<ItemInfo> storedItems = storedOrder.getOrderItems();
 
@@ -145,6 +145,11 @@ public class OrdersService {
             ordersRepository.update(storedOrder);
         }
 
+    }
+
+    @Cacheable
+    public HashSet<String> findAllItems(){
+        return new HashSet<>(stocksServiceClient.getAllItemIds());
     }
 
     /**
