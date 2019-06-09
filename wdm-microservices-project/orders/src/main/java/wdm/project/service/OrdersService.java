@@ -23,7 +23,6 @@ import wdm.project.service.clients.StocksServiceClient;
 
 @Service
 @Transactional(rollbackFor = OrderException.class)
-@CacheConfig(cacheNames={"orders"})
 public class OrdersService {
 
     @Autowired
@@ -130,7 +129,7 @@ public class OrdersService {
             throw new OrderException("There is no order with it \"" + orderId + "\"");
         }
 
-        if (!findAllItems().contains(itemId)) {
+        if (checkItem(itemId)) {
             throw new OrderException("Item id does not exist: ", HttpStatus.NOT_FOUND);
         }
 
@@ -150,9 +149,8 @@ public class OrdersService {
         }
     }
 
-    @Cacheable
-    public HashSet<Long> findAllItems(){
-        return new HashSet<>(stocksServiceClient.getAllItemIds());
+    public Boolean checkItem(Long itemId){
+        return stocksServiceClient.checkItem(itemId);
     }
 
     /**

@@ -7,7 +7,6 @@ import org.springframework.cloud.netflix.feign.EnableFeignClients;
 
 @EnableFeignClients
 @SpringBootApplication
-@EnableCaching
 public class OrdersApplication {
 
 	public static void main(String[] args) {

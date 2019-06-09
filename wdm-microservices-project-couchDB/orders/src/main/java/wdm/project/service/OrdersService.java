@@ -1,12 +1,9 @@
 package wdm.project.service;
 
-import java.util.HashSet;
 import java.util.List;
 
 import feign.FeignException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheConfig;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import wdm.project.dto.ItemInfo;
@@ -18,7 +15,6 @@ import wdm.project.service.clients.PaymentsServiceClient;
 import wdm.project.service.clients.StocksServiceClient;
 
 @Service
-@CacheConfig(cacheNames={"orders"})
 public class OrdersService {
 
     @Autowired
@@ -113,9 +109,7 @@ public class OrdersService {
 
         checkItems(orderId, itemId);
 
-        HashSet itemsCache = new HashSet<>(findAllItems());
-
-        if (!itemsCache.contains(itemId)) {
+        if (!checkItem(itemId)) {
             throw new OrderException("Item id does not exist: ", HttpStatus.NOT_FOUND);
         }
 
@@ -145,9 +139,8 @@ public class OrdersService {
 
     }
 
-    @Cacheable
-    public List<String> findAllItems(){
-        return stocksServiceClient.getAllItemIds();
+    public Boolean checkItem(String itemId){
+        return stocksServiceClient.checkItem(itemId);
     }
 
     /**

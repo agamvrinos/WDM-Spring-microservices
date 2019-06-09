@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,6 +15,7 @@ import wdm.project.exception.StockException;
 import wdm.project.repository.StocksRepository;
 
 @Service
+@CacheConfig(cacheNames={"items"})
 public class StocksService {
 
     @Autowired
@@ -49,10 +52,8 @@ public class StocksService {
         return item.getStock();
     }
 
-    public List<Long> getAllItemIds(){
-        stocksRepository.getAllItemIds();
-        return null;
-    }
+    @Cacheable
+    public Boolean checkItem(Long itemId){ return  stocksRepository.existsById(itemId); }
 
     /**
      * Creates a new Item based on the provided

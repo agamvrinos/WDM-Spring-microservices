@@ -1,6 +1,8 @@
 package wdm.project.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import wdm.project.dto.Item;
@@ -11,6 +13,7 @@ import wdm.project.repository.StocksRepository;
 import java.util.List;
 
 @Service
+@CacheConfig(cacheNames={"items"})
 public class StocksService {
 
     @Autowired
@@ -47,10 +50,8 @@ public class StocksService {
         return item.getStock();
     }
 
-    public List<String> getAllItemIds(){
-        System.out.println("Sending all the item information");
-        return stocksRepository.getAllItemIds();
-    }
+    @Cacheable
+    public Boolean checkItem(String itemId){ return  stocksRepository.contains(itemId); }
 
     /**
      * Creates a new Item based on the provided

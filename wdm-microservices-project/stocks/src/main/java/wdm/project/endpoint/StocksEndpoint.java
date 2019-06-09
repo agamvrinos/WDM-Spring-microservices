@@ -26,9 +26,9 @@ public class StocksEndpoint {
         return stocksService.getItem(itemId);
     }
 
-    @GetMapping("/getAllItems")
-    public List<Long> getAllItemIds(){
-        return stocksService.getAllItemIds();
+    @GetMapping("/checkItem/{id}")
+    public Boolean checkItem(@PathVariable("id") Long itemId){
+        return stocksService.checkItem(itemId);
     }
 
     @GetMapping("/availability/{id}")
