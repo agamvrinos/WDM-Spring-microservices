@@ -14,7 +14,7 @@ item_ids = list()
 for item in items:
     response = requests.post(url=f"{gateway_url}/api/stock/stock/item/create", json=item)
     if response.status_code == 200:
-        item_ids.append(response.json())
+        item_ids.append(response.text)
     else:
         raise ConnectionError(f"Creation of item {item} has failed: {response.status_code}")
 with open(sys.argv[5], "wb") as item_id_file:
@@ -25,7 +25,7 @@ user_ids = list()
 for user in users:
     response = requests.post(url=f"{gateway_url}/api/users/users/create", json=user)
     if response.status_code == 200:
-        user_ids.append(response.json())
+        user_ids.append(response.text)
     else:
         raise ConnectionError(f"Creation of user {user} has failed: {response.status_code}")
 with open(sys.argv[4], "wb") as user_id_file:
