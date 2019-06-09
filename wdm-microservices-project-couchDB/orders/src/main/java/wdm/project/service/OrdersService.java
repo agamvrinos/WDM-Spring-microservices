@@ -1,5 +1,6 @@
 package wdm.project.service;
 
+import java.util.HashMap;
 import java.util.List;
 
 import feign.FeignException;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 import wdm.project.dto.ItemInfo;
 import wdm.project.dto.Order;
 import wdm.project.dto.OrdersWrapper;
+import wdm.project.dto.remote.Item;
 import wdm.project.exception.OrderException;
 import wdm.project.repository.OrderRepository;
 import wdm.project.service.clients.PaymentsServiceClient;
@@ -17,12 +19,14 @@ import wdm.project.service.clients.StocksServiceClient;
 @Service
 public class OrdersService {
 
-	@Autowired
-	private StocksServiceClient stocksServiceClient;
-	@Autowired
-	private PaymentsServiceClient paymentsServiceClient;
+    @Autowired
+    private StocksServiceClient stocksServiceClient;
+    @Autowired
+    private PaymentsServiceClient paymentsServiceClient;
     @Autowired
     private OrderRepository ordersRepository;
+
+    private HashMap<String, Item> itemCache = new HashMap<>();
 
     /**
      * Initializes an order in the micro-service's database with zero
@@ -34,15 +38,15 @@ public class OrdersService {
      * @throws OrderException in case the id of the user was not provided
      */
     public String createOrder(String userId) throws OrderException {
-    	if (userId == null) {
-    		throw new OrderException("User id was not provided", HttpStatus.BAD_REQUEST);
-	    }
+        if (userId == null) {
+            throw new OrderException("User id was not provided", HttpStatus.BAD_REQUEST);
+        }
         Order order = new Order();
         order.setUserId(userId);
         order.setTotal(0);
         ordersRepository.add(order);
 
-        return  order.getId();
+        return order.getId();
     }
 
     /**
@@ -69,17 +73,17 @@ public class OrdersService {
      * @param orderId the id of the order
      * @return the order information (user id, items' id, payment status)
      * @throws OrderException when the order id was not provided or the
-     * order with the provided ID is not found
+     *                        order with the provided ID is not found
      */
     public OrdersWrapper findOrder(String orderId) throws OrderException {
-		if (orderId == null) {
-			throw new OrderException("The order id was not provided");
-		}
+        if (orderId == null) {
+            throw new OrderException("The order id was not provided");
+        }
 
-		Order order;
+        Order order;
 
-		try{
-            order  = ordersRepository.get(orderId);
+        try {
+            order = ordersRepository.get(orderId);
         } catch (Exception exception) {
             throw new OrderException("The order does not exist");
         }
@@ -101,27 +105,30 @@ public class OrdersService {
      * Adds an item to a specified order.
      *
      * @param requestOrderItem contains the amount that of the items
-     * in the order
-     * @param itemId the id of the item
-     * @param orderId the id of the order the item is linked to
+     *                         in the order
+     * @param itemId           the id of the item
+     * @param orderId          the id of the order the item is linked to
      */
     public void addItem(ItemInfo requestOrderItem, String orderId, String itemId) throws OrderException {
 
         checkItems(orderId, itemId);
 
-        // Check whether item exists.
-        try {
-            stocksServiceClient.getItem(itemId);
-        } catch (FeignException exception) {
-            throw new OrderException("There is no item with id \"" + itemId + "\"");
+        if (!itemCache.containsKey(itemId)) {
+            try {
+                itemCache.put(itemId, stocksServiceClient.getItem(itemId));
+            } catch (FeignException exception) {
+                throw new OrderException("There is no item with id \"" + itemId + "\"");
+            }
         }
 
-	    Order storedOrder = ordersRepository.get(orderId);
-	    List<ItemInfo> storedItems =  storedOrder.getOrderItems();
+        System.out.println(itemCache.size());
 
-	    boolean storedFlag = false;
+        Order storedOrder = ordersRepository.get(orderId);
+        List<ItemInfo> storedItems = storedOrder.getOrderItems();
 
-        if (!storedItems.isEmpty()){
+        boolean storedFlag = false;
+
+        if (!storedItems.isEmpty()) {
             for (ItemInfo storedItem : storedItems) {
                 if (storedItem.getId().equals(itemId)) {
                     storedItem.setAmount(storedItem.getAmount() + requestOrderItem.getAmount());
@@ -132,7 +139,7 @@ public class OrdersService {
             }
         }
 
-        if(!storedFlag){
+        if (!storedFlag) {
             ItemInfo newItem = new ItemInfo();
             newItem.setAmount(requestOrderItem.getAmount());
             newItem.setId(itemId);
@@ -146,16 +153,16 @@ public class OrdersService {
      * Removes a specified item from a specified order.
      *
      * @param orderId the id of the order that the item is removed from
-     * @param itemId the id of the item that is to be removed
+     * @param itemId  the id of the item that is to be removed
      * @throws OrderException when the OrderItem with provided IDs cannot be found.
      */
     public void removeItem(String orderId, String itemId) throws OrderException {
 
         checkItems(orderId, itemId);
 
-        if (ordersRepository.contains(orderId)){
+        if (ordersRepository.contains(orderId)) {
             Order storedOrder = ordersRepository.get(orderId);
-            List<ItemInfo> storedItems =  storedOrder.getOrderItems();
+            List<ItemInfo> storedItems = storedOrder.getOrderItems();
 
             for (ItemInfo storedItem : storedItems) {
                 if (storedItem.getId().equals(itemId)) {
@@ -177,7 +184,7 @@ public class OrdersService {
      * successful transaction
      * FAILURE for a failed transaction.
      */
-    public void  checkoutOrder(String orderId) throws OrderException {
+    public void checkoutOrder(String orderId) throws OrderException {
         OrdersWrapper order = findOrder(orderId);
         Integer price;
         try {
@@ -201,7 +208,7 @@ public class OrdersService {
         }
     }
 
-    private void checkItems(String orderId, String itemId)throws OrderException{
+    private void checkItems(String orderId, String itemId) throws OrderException {
         if (orderId == null) {
             throw new OrderException("Order id was not provided");
         }
