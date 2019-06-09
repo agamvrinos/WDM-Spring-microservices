@@ -73,7 +73,7 @@ class User(TaskSet):
                 catch_response=True) as response:
             if response.status_code == 400:
                 response.success()
-        self._get_new_order()
+        self._get_new_order(previous_id=self.order_id)
 
 
 class WebsiteUser(HttpLocust):
