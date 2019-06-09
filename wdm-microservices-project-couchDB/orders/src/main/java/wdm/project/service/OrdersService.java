@@ -1,6 +1,5 @@
 package wdm.project.service;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
@@ -13,7 +12,6 @@ import org.springframework.stereotype.Service;
 import wdm.project.dto.ItemInfo;
 import wdm.project.dto.Order;
 import wdm.project.dto.OrdersWrapper;
-import wdm.project.dto.remote.Item;
 import wdm.project.exception.OrderException;
 import wdm.project.repository.OrderRepository;
 import wdm.project.service.clients.PaymentsServiceClient;
@@ -29,8 +27,6 @@ public class OrdersService {
     private PaymentsServiceClient paymentsServiceClient;
     @Autowired
     private OrderRepository ordersRepository;
-
-    private HashMap<String, Item> itemCache = new HashMap<>();
 
     /**
      * Initializes an order in the micro-service's database with zero
@@ -117,7 +113,9 @@ public class OrdersService {
 
         checkItems(orderId, itemId);
 
-        if (!findAllItems().contains(itemId)) {
+        HashSet itemsCache = new HashSet<>(findAllItems());
+
+        if (!itemsCache.contains(itemId)) {
             throw new OrderException("Item id does not exist: ", HttpStatus.NOT_FOUND);
         }
 
@@ -148,8 +146,8 @@ public class OrdersService {
     }
 
     @Cacheable
-    public HashSet<String> findAllItems(){
-        return new HashSet<>(stocksServiceClient.getAllItemIds());
+    public List<String> findAllItems(){
+        return stocksServiceClient.getAllItemIds();
     }
 
     /**

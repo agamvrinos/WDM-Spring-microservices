@@ -48,8 +48,8 @@ public class StocksService {
     }
 
     public List<String> getAllItemIds(){
-        stocksRepository.getAllItemIds();
-        return null;
+        System.out.println("Sending all the item information");
+        return stocksRepository.getAllItemIds();
     }
 
     /**

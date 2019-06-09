@@ -25,6 +25,7 @@ public class StocksRepository extends CouchDbRepositorySupport<Item> {
         for (Item item: getAll()){
             itemIds.add(item.getId());
         }
+
         return itemIds;
 
     }
