@@ -1,6 +1,7 @@
 eureka:
   server:
     renewalPercentThreshold: 0.49
+    enableSelfPreservation: false
   instance:
     # not sure what this is for
     hostname: localhost
