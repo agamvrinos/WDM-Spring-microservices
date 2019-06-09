@@ -1,5 +1,6 @@
 package wdm.project.service;
 
+import org.ektorp.UpdateConflictException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -146,7 +147,12 @@ public class StocksService {
                         totalPrice += itemInfo.getAmount() * item.getPrice();
                         subtractEntry.setStatus(Status.SUCCESS);
                         journalRepository.update(subtractEntry);
-                        stocksRepository.update(item);
+                        try {
+                            stocksRepository.update(item);
+                        }
+                        catch(UpdateConflictException e) {
+                            subtractItems(transactionId, itemInfos.subList(idxOfFailure,itemInfos.size()-1));
+                        }
                     }
                     else if (status.equals(Status.FAILURE.getValue())){
                         //If it has failed, rollback from the previous index
@@ -164,8 +170,12 @@ public class StocksService {
                     totalPrice += itemInfo.getAmount() * item.getPrice();
                     subtractEntry.setStatus(Status.SUCCESS);
                     journalRepository.add(subtractEntry);
-                    stocksRepository.update(item);
-
+                    try {
+                        stocksRepository.update(item);
+                    }
+                    catch(UpdateConflictException e) {
+                        subtractItems(transactionId, itemInfos.subList(idxOfFailure,itemInfos.size()-1));
+                    }
                 }
                 idxOfFailure++;
             }
@@ -200,7 +210,7 @@ public class StocksService {
                         // If it exists and is PENDING
                         try {
                             stocksRepository.update(item);
-                        } catch(Exception e) {
+                        } catch(UpdateConflictException e) {
                             addItems(transactionId, itemInfos.subList(idxOfFailure,itemInfos.size()-1));
                         }
                         journalRepository.update(addEntry);
@@ -208,7 +218,7 @@ public class StocksService {
                 } else {
                     try {
                         stocksRepository.update(item);
-                    } catch(Exception e) {
+                    } catch(UpdateConflictException e) {
                         addItems(transactionId, itemInfos.subList(idxOfFailure,itemInfos.size()-1));
                     }
                     journalRepository.add(addEntry);
@@ -231,7 +241,7 @@ public class StocksService {
             try {
                 stocksRepository.update(item);
             }
-            catch(Exception e) {
+            catch(UpdateConflictException e) {
                 rollbackItemSubtraction(transactionId, itemInfos.subList(idxOfFailure, itemInfos.size()-1));
             }
             idxOfFailure++;
