@@ -128,7 +128,7 @@ public class StocksService {
                 stocksRepository.update(item);
             }
             catch(Exception e) {
-                subtractItems(itemInfos.subList(idxOfFailure,itemInfos.size()-1));
+                addItems(itemInfos.subList(idxOfFailure,itemInfos.size()-1));
             }
             idxOfFailure++;
         }
@@ -147,7 +147,7 @@ public class StocksService {
                 stocksRepository.update(item);
             }
             catch(Exception e) {
-                subtractItems(itemInfos.subList(idxOfFailure,itemInfos.size()-1));
+                rollbackItemSubtraction(itemInfos.subList(idxOfFailure,itemInfos.size()-1));
             }
             idxOfFailure++;
         }
