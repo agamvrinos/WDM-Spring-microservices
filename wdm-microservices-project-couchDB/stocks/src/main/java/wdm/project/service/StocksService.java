@@ -1,5 +1,6 @@
 package wdm.project.service;
 
+import org.ektorp.UpdateConflictException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -103,7 +104,7 @@ public class StocksService {
             try {
                 stocksRepository.update(item);
             }
-            catch(Exception e) {
+            catch(UpdateConflictException e) {
                 subtractItems(itemInfos.subList(idxOfFailure,itemInfos.size()-1));
             }
             idxOfFailure++;
@@ -127,7 +128,7 @@ public class StocksService {
             try {
                 stocksRepository.update(item);
             }
-            catch(Exception e) {
+            catch(UpdateConflictException e) {
                 addItems(itemInfos.subList(idxOfFailure,itemInfos.size()-1));
             }
             idxOfFailure++;
@@ -146,7 +147,7 @@ public class StocksService {
             try {
                 stocksRepository.update(item);
             }
-            catch(Exception e) {
+            catch(UpdateConflictException e) {
                 rollbackItemSubtraction(itemInfos.subList(idxOfFailure,itemInfos.size()-1));
             }
             idxOfFailure++;
