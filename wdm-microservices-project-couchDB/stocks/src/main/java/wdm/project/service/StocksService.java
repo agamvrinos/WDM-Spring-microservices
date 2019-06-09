@@ -93,7 +93,7 @@ public class StocksService {
             Item item = getItem(itemInfo.getId());
             Integer currentStock = item.getStock();
             if (itemInfo.getAmount() > currentStock) {
-                rollbackItemSubtraction(itemInfos.subList(idxOfFailure,itemInfos.size()-1));
+                rollbackItemSubtraction(itemInfos.subList(0, idxOfFailure));
                 throw new StockException("The stock of item ID " + itemInfo.getId() + " is " + currentStock +
                         " and can therefore not be reduced by " + itemInfo.getAmount() + ".", HttpStatus.BAD_REQUEST);
             }
