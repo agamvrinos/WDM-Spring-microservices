@@ -99,13 +99,19 @@ public class StocksService {
             Item item = getItem(itemInfo.getId());
             Integer currentStock = item.getStock();
             if (itemInfo.getAmount() > currentStock) {
-                rollbackItemSubtraction(itemInfos, idxOfFailure);
+                rollbackItemSubtraction(itemInfos.subList(0, idxOfFailure));
                 throw new StockException("The stock of item ID " + itemInfo.getId() + " is " + currentStock +
                         " and can therefore not be reduced by " + itemInfo.getAmount() + ".", HttpStatus.BAD_REQUEST);
             }
             item.setStock(currentStock - itemInfo.getAmount());
             totalPrice += itemInfo.getAmount() * item.getPrice();
-            stocksRepository.update(item);
+            // If the doc _rev has changed due to concurrent changes, it will fail
+            try {
+                stocksRepository.update(item);
+            }
+            catch(Exception e) {
+                subtractItems(itemInfos.subList(idxOfFailure,itemInfos.size()-1));
+            }
             idxOfFailure++;
         }
         return totalPrice;
@@ -118,23 +124,38 @@ public class StocksService {
      * @throws StockException when an item ID is not found
      */
     public void addItems(List<ItemInfo> itemInfos) throws StockException {
+        int idxOfFailure = 0;
         for(ItemInfo itemInfo: itemInfos) {
             Item item = getItem(itemInfo.getId());
             Integer currentStock = item.getStock();
             item.setStock(currentStock + itemInfo.getAmount());
-            stocksRepository.update(item);
+            // If the doc _rev has changed due to concurrent changes, it will fail
+            try {
+                stocksRepository.update(item);
+            }
+            catch(Exception e) {
+                addItems(itemInfos.subList(idxOfFailure,itemInfos.size()-1));
+            }
+            idxOfFailure++;
         }
     }
 
-    private void rollbackItemSubtraction(List<ItemInfo> itemInfos, int idxOfFailure) throws StockException {
-        for(int i = 0; i < idxOfFailure; i++) {
+    private void rollbackItemSubtraction(List<ItemInfo> itemInfos) throws StockException {
+        int idxOfFailure = 0;
+        for(int i = 0; i < itemInfos.size(); i++) {
             ItemInfo itemInfo = itemInfos.get(i);
 
             Item item = getItem(itemInfo.getId());
             Integer currentStock = item.getStock();
 
             item.setStock(currentStock + itemInfo.getAmount());
-            stocksRepository.update(item);
+            try {
+                stocksRepository.update(item);
+            }
+            catch(Exception e) {
+                rollbackItemSubtraction(itemInfos.subList(idxOfFailure,itemInfos.size()-1));
+            }
+            idxOfFailure++;
         }
     }
 }

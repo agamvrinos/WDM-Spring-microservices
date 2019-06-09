@@ -1,6 +1,7 @@
 package wdm.project.service;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -98,6 +99,7 @@ public class StocksService {
     public Integer subtractItems(List<ItemInfo> itemInfos) throws StockException {
         List<Item> items = new ArrayList<>();
         int totalPrice = 0;
+        itemInfos.sort(Comparator.comparing(ItemInfo::getId));
         for(ItemInfo itemInfo: itemInfos) {
             Item item  = getItem(itemInfo.getId());
             Integer currentStock = item.getStock();
@@ -122,6 +124,7 @@ public class StocksService {
     @Transactional(rollbackFor = StockException.class)
     public void addItems(List<ItemInfo> itemInfos) throws StockException {
         List<Item> items = new ArrayList<>();
+        itemInfos.sort(Comparator.comparing(ItemInfo::getId));
         for (ItemInfo itemInfo: itemInfos) {
             Item item = getItem(itemInfo.getId());
             item.setStock(item.getStock() + itemInfo.getAmount());

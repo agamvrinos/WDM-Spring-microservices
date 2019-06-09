@@ -36,7 +36,7 @@ public class StocksEndpoint {
         return stocksService.getItemAvailability(itemId);
     }
 
-    @PostMapping("/item/create/")
+    @PostMapping("/item/create")
     public String createItem(@RequestBody Item requestItem) {
         Item item = stocksService.createItem(requestItem);
         return item.getId();
