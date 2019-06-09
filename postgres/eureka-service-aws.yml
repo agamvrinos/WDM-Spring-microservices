@@ -1,4 +1,6 @@
 eureka:
+  server:
+    renewalPercentThreshold: 0.49
   instance:
     # not sure what this is for
     hostname: localhost
