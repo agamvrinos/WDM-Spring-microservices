@@ -1,8 +1,8 @@
 Name: locust
 
 image:
-  repository: greenbirdit/locust
-  tag: 0.9.0
+  repository: agamvrinos/locust
+  tag: 0.1
   pullPolicy: IfNotPresent
   pullSecrets: []
 
@@ -16,7 +16,7 @@ service:
   extraLabels: {}
 master:
   config:
-    target-host: https://6ull6qibdeasdf.execute-api.us-east-1.amazonaws.com/dev
+    target-host: http://18.214.39.127:8080
   resources:
     limits:
       cpu: 100m
@@ -32,7 +32,7 @@ worker:
 
     # all files from specified configmap (or tasks folder) are mounted under `/locust-tasks`
     locust-script: "/locust-tasks/tasks.py"
-  replicaCount: 10
+  replicaCount: 20
   resources:
     limits:
       cpu: 100m
