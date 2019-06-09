@@ -15,7 +15,6 @@ import wdm.project.dto.remote.ItemInfo;
 import wdm.project.enums.Event;
 import wdm.project.enums.Status;
 import wdm.project.exception.StockException;
-import wdm.project.repository.JournalRepository;
 import wdm.project.repository.StocksRepository;
 
 @Service
@@ -26,8 +25,6 @@ public class StocksService {
     private EventService eventService;
     @Autowired
     private StocksRepository stocksRepository;
-    @Autowired
-    private JournalRepository journalRepository;
 
     /**
      * Returns the Item instance with the provided id.
@@ -161,8 +158,7 @@ public class StocksService {
                 items.add(item);
             }
             stocksRepository.saveAll(items);
-            addEntry.setStatus(Status.SUCCESS);
-            journalRepository.save(addEntry);
+            eventService.saveEvent(journalEntryId, null, Status.SUCCESS);
         }
     }
 }
