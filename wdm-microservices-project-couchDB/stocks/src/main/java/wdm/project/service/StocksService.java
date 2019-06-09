@@ -138,7 +138,7 @@ public class StocksService {
                         if (itemInfo.getAmount() > currentStock) {
                             subtractEntry.setStatus(Status.FAILURE);
                             journalRepository.update(subtractEntry);
-                            rollbackItemSubtraction(transactionId, itemInfos, idxOfFailure);
+                            rollbackItemSubtraction(transactionId, itemInfos.subList(0, idxOfFailure));
                             throw new StockException("The stock of item ID " + itemInfo.getId() + " is " + currentStock +
                                     " and can therefore not be reduced by " + itemInfo.getAmount() + ".", HttpStatus.BAD_REQUEST);
                         }
@@ -150,13 +150,13 @@ public class StocksService {
                     }
                     else if (status.equals(Status.FAILURE.getValue())){
                         //If it has failed, rollback from the previous index
-                        rollbackItemSubtraction(transactionId, itemInfos, idxOfFailure-1);
+                        rollbackItemSubtraction(transactionId, itemInfos.subList(0, idxOfFailure-1));
                     }
                 }else{
                     if (itemInfo.getAmount() > currentStock) {
                         subtractEntry.setStatus(Status.FAILURE);
                         journalRepository.add(subtractEntry);
-                        rollbackItemSubtraction(transactionId, itemInfos, idxOfFailure);
+                        rollbackItemSubtraction(transactionId, itemInfos.subList(0, idxOfFailure));
                         throw new StockException("The stock of item ID " + itemInfo.getId() + " is " + currentStock +
                                 " and can therefore not be reduced by " + itemInfo.getAmount() + ".", HttpStatus.BAD_REQUEST);
                     }
@@ -182,6 +182,8 @@ public class StocksService {
      */
     public void addItems(String transactionId, List<ItemInfo> itemInfos) throws StockException {
 
+            int idxOfFailure = 0;
+
             for (ItemInfo itemInfo : itemInfos) {
 
                 Item item = getItem(itemInfo.getId());
@@ -196,20 +198,29 @@ public class StocksService {
                 if(!journalEntries.isEmpty()){
                     if (journalEntries.get(0).getStatus().equals(Status.PENDING.getValue())) {
                         // If it exists and is PENDING
-                        stocksRepository.update(item);
+                        try {
+                            stocksRepository.update(item);
+                        } catch(Exception e) {
+                            addItems(transactionId, itemInfos.subList(idxOfFailure,itemInfos.size()-1));
+                        }
                         journalRepository.update(addEntry);
                     }
-                }
-                else{
-                    stocksRepository.update(item);
+                } else {
+                    try {
+                        stocksRepository.update(item);
+                    } catch(Exception e) {
+                        addItems(transactionId, itemInfos.subList(idxOfFailure,itemInfos.size()-1));
+                    }
                     journalRepository.add(addEntry);
                 }
+
+                idxOfFailure++;
             }
     }
 
-    private void rollbackItemSubtraction(String transactionId, List<ItemInfo> itemInfos, int idxOfFailure) throws StockException {
-
-        for(int i = 0; i < idxOfFailure; i++) {
+    private void rollbackItemSubtraction(String transactionId, List<ItemInfo> itemInfos) throws StockException {
+        int idxOfFailure = 0;
+        for(int i = 0; i < itemInfos.size(); i++) {
             ItemInfo itemInfo = itemInfos.get(i);
             Item item = getItem(itemInfo.getId());
             JournalEntry rollbackEntry = getJournalEntry(transactionId + "-"+ item.getId() +"-" + Event.SUBTRACT_STOCK);
@@ -217,7 +228,13 @@ public class StocksService {
             Integer currentStock = item.getStock();
             item.setStock(currentStock + itemInfo.getAmount());
             journalRepository.update(rollbackEntry);
-            stocksRepository.update(item);
+            try {
+                stocksRepository.update(item);
+            }
+            catch(Exception e) {
+                rollbackItemSubtraction(transactionId, itemInfos.subList(idxOfFailure, itemInfos.size()-1));
+            }
+            idxOfFailure++;
         }
     }
 
