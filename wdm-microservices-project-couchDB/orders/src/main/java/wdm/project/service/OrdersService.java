@@ -120,9 +120,7 @@ public class OrdersService {
                 throw new OrderException("There is no item with id \"" + itemId + "\"");
             }
         }
-
-        System.out.println(itemCache.size());
-
+        
         Order storedOrder = ordersRepository.get(orderId);
         List<ItemInfo> storedItems = storedOrder.getOrderItems();
 
