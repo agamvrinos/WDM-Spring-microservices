@@ -43,7 +43,7 @@ class User(TaskSet):
                     name="/orders/create/{user_id}",
                     catch_response=True) as create_response:
                 if create_response.status_code == 200:
-                    self.order_id = create_response.json()
+                    self.order_id = create_response.text
                     break
 
     @task(10)
