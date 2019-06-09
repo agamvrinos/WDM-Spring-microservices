@@ -1,6 +1,5 @@
 package wdm.project.service;
 
-import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -9,6 +8,8 @@ import feign.FeignException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import wdm.project.dto.ItemInfo;
 import wdm.project.dto.JournalEntry;
 import wdm.project.dto.JournalEntryId;
@@ -26,9 +27,11 @@ import wdm.project.service.clients.PaymentsServiceClient;
 import wdm.project.service.clients.StocksServiceClient;
 
 @Service
-@Transactional
+@Transactional(propagation = Propagation.REQUIRED, rollbackFor = OrderException.class)
 public class OrdersService {
 
+	@Autowired
+	private EventService eventService;
 	@Autowired
 	private StocksServiceClient stocksServiceClient;
 	@Autowired
@@ -110,7 +113,7 @@ public class OrdersService {
 
         try {
             ordersWrapper.setPaymentStatus(paymentsServiceClient.getPaymentStatus(orderId));
-        } catch (FeignException exception) {
+        } catch (Exception e) {
             throw new OrderException("Something went wrong while retrieving the payment status", HttpStatus.INTERNAL_SERVER_ERROR);
         }
         return ordersWrapper;
@@ -133,14 +136,14 @@ public class OrdersService {
 	    }
 	    boolean existsOrder = ordersRepository.existsById(orderId);
 	    if (!existsOrder) {
-	    	throw new OrderException("There is no order with it \"" + orderId + "\"");
+	    	throw new OrderException("There is no order with it \"" + orderId + "\"", HttpStatus.NOT_FOUND);
 	    }
 
 	    // Check whether item exists.
 	    try {
 	        stocksServiceClient.getItem(itemId);
         } catch (FeignException exception) {
-	        throw new OrderException(exception.contentUTF8(), HttpStatus.resolve(exception.status()));
+		    throw new OrderException("GET ITEM FAILED: " + exception.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
         OrderItemId orderItemId = new OrderItemId(orderId, itemId);
@@ -187,10 +190,11 @@ public class OrdersService {
         OrdersWrapper order = findOrder(orderId);
         JournalEntry checkoutEntry;
         JournalEntryId id = new JournalEntryId(orderId, Event.CHECKOUT);
+
         if (journalRepository.existsById(id)) {
             checkoutEntry = journalRepository.getOne(id);
         } else {
-            checkoutEntry = new JournalEntry(id, Status.STOCK_PENDING, -1);
+			checkoutEntry = new JournalEntry(id, Status.STOCK_PENDING, -1);
         }
         checkoutOrder(orderId, checkoutEntry, order);
     }
@@ -206,8 +210,8 @@ public class OrdersService {
             case PAYMENT_FAILURE: throw new OrderException("The credit of user " + order.getUserId() + " was not sufficient to pay " + checkoutEntry.getPrice(), HttpStatus.BAD_REQUEST);
             case STOCK_PENDING: {
                 try {
-                    Integer price = stocksServiceClient.subtractItem(orderId, order.getOrderItems());
-                    checkoutEntry.setPrice(price);
+	                Integer price = stocksServiceClient.subtractItem(orderId, order.getOrderItems());
+	                checkoutEntry.setPrice(price);
                     checkoutEntry.setStatus(Status.STOCK_SUCCESS);
                 } catch (FeignException exception) {
                     if (exception.status() == 400) {
@@ -240,7 +244,7 @@ public class OrdersService {
                 }
             }
         }
-        journalRepository.save(checkoutEntry);
+        checkoutEntry = eventService.saveEvent(checkoutEntry);
         checkoutOrder(orderId, checkoutEntry, order);
     }
 }
