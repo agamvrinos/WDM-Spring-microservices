@@ -3,6 +3,8 @@ package wdm.project.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import wdm.project.dto.JournalEntry;
 import wdm.project.dto.JournalEntryId;
 import wdm.project.dto.User;
@@ -13,8 +15,11 @@ import wdm.project.repository.JournalRepository;
 import wdm.project.repository.UsersRepository;
 
 @Service
+@Transactional(propagation = Propagation.REQUIRED, rollbackFor = UsersException.class)
 public class UsersService {
 
+	@Autowired
+	private EventService eventService;
     @Autowired
     private UsersRepository usersRepository;
     @Autowired
@@ -121,22 +126,22 @@ public class UsersService {
         // When true, the transaction has already been processed; either throw exception or do nothing
         if (journalRepository.existsById(journalId)) {
             reduceEntry = journalRepository.getOne(journalId);
-            if (reduceEntry.getStatus().equals(Status.FAILURE.getValue())) {
+
+	        Status status = Status.findStatusEnum(reduceEntry.getStatus());
+	        if (status == Status.FAILURE) {
                 throw new UsersException("The reduction for transaction with ID " + transactionId + " has already failed before", HttpStatus.BAD_REQUEST);
             }
         }
         // Not processed, process the transaction.
         else {
-            reduceEntry = new JournalEntry(journalId, Status.SUCCESS);
             Integer credit = user.getCredit();
             if (amount > credit) {
-                reduceEntry.setStatus(Status.FAILURE);
-                journalRepository.save(reduceEntry);
+	            eventService.saveEvent(journalId, Status.FAILURE);
                 throw new UsersException("Insufficient credit", HttpStatus.BAD_REQUEST);
             } else {
                 user.setCredit(credit - amount);
                 usersRepository.save(user);
-                journalRepository.save(reduceEntry);
+	            eventService.saveEvent(journalId, Status.SUCCESS);
             }
         }
     }
