@@ -19,6 +19,9 @@ public interface StocksServiceClient {
 	@GetMapping("/stock/availability/{id}")
 	Integer getItemAvailability(@PathVariable("id") String itemId);
 
+	@GetMapping("/stock/checkItem/{id}")
+	Boolean checkItem(@PathVariable("id") String itemId);
+
 	@PostMapping("/stock/item/create")
 	String createItem(@RequestBody Item requestItem);
 
