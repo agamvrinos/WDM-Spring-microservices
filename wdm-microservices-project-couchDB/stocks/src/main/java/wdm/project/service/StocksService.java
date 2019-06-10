@@ -1,7 +1,10 @@
 package wdm.project.service;
 
+import org.ektorp.DocumentNotFoundException;
 import org.ektorp.UpdateConflictException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import wdm.project.dto.Item;
@@ -12,6 +15,7 @@ import wdm.project.repository.StocksRepository;
 import java.util.List;
 
 @Service
+@CacheConfig(cacheNames={"items"})
 public class StocksService {
 
     @Autowired
@@ -28,11 +32,11 @@ public class StocksService {
         if (itemId == null) {
             throw new StockException("Provided item ID was null. Please provide a valid ID.", HttpStatus.BAD_REQUEST);
         }
-        boolean existsStocks = stocksRepository.contains(itemId);
-        if (!existsStocks) {
+        try{
+            return stocksRepository.get(itemId);
+        } catch (DocumentNotFoundException exception){
             throw new StockException("The item with ID " + itemId + " was not found.", HttpStatus.NOT_FOUND);
         }
-        return stocksRepository.get(itemId);
     }
 
     /**
@@ -47,6 +51,9 @@ public class StocksService {
         Item item = getItem(itemId);
         return item.getStock();
     }
+
+    @Cacheable
+    public Boolean checkItem(String itemId){ return  stocksRepository.contains(itemId); }
 
     /**
      * Creates a new Item based on the provided
@@ -104,7 +111,7 @@ public class StocksService {
             try {
                 stocksRepository.update(item);
             }
-            catch(UpdateConflictException e) {
+            catch(UpdateConflictException  e) {
                 subtractItems(itemInfos.subList(idxOfFailure,itemInfos.size()-1));
             }
             idxOfFailure++;
@@ -128,7 +135,7 @@ public class StocksService {
             try {
                 stocksRepository.update(item);
             }
-            catch(UpdateConflictException e) {
+            catch(UpdateConflictException  e) {
                 addItems(itemInfos.subList(idxOfFailure,itemInfos.size()-1));
             }
             idxOfFailure++;
