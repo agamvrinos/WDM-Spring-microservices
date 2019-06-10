@@ -80,7 +80,7 @@ public class OrdersService {
 
         try {
             order = ordersRepository.get(orderId);
-        } catch (Exception exception) {
+        } catch (DocumentNotFoundException exception) {
             throw new OrderException("The order does not exist");
         }
 
@@ -206,7 +206,7 @@ public class OrdersService {
     private Order getOrderForCheckout(String orderId) throws OrderException {
         try {
             return ordersRepository.get(orderId);
-        } catch (Exception exception) {
+        } catch (DocumentNotFoundException exception) {
             throw new OrderException("The order does not exist");
         }
     }
