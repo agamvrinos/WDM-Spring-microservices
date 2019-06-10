@@ -3,6 +3,7 @@ package wdm.project.service;
 import java.util.List;
 
 import feign.FeignException;
+import org.ektorp.DocumentNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -112,17 +113,21 @@ public class OrdersService {
 
         checkItems(orderId, itemId);
 
-        // Check whether item exists.
-        try {
-            stocksServiceClient.getItem(itemId);
-        } catch (FeignException exception) {
-            throw new OrderException("There is no item with id \"" + itemId + "\"");
+        if (!checkItem(itemId)) {
+            throw new OrderException("Item id does not exist: ", HttpStatus.NOT_FOUND);
         }
 
-	    Order storedOrder = ordersRepository.findOrder(orderId).get(0);
-	    List<ItemInfo> storedItems =  storedOrder.getOrderItems();
+	    Order storedOrder;
 
-	    boolean storedFlag = false;
+        try{
+            storedOrder = ordersRepository.findOrder(orderId).get(0);
+        } catch (DocumentNotFoundException e) {
+            throw new OrderException("There is no order with it \"" + orderId + "\"");
+        }
+
+        List<ItemInfo> storedItems =  storedOrder.getOrderItems();
+
+        boolean storedFlag = false;
 
         if (!storedItems.isEmpty()){
             for (ItemInfo storedItem : storedItems) {
@@ -156,7 +161,13 @@ public class OrdersService {
 
         checkItems(orderId, itemId);
 
-        List<Order> orders = ordersRepository.findOrder(orderId);
+        List<Order> orders;
+
+        try{
+            orders = ordersRepository.findOrder(orderId);
+        } catch (DocumentNotFoundException e) {
+            throw new OrderException("There is no order with it \"" + orderId + "\"");
+        }
 
         if (!orders.isEmpty()){
             Order storedOrder = orders.get(0);
@@ -182,7 +193,7 @@ public class OrdersService {
      * FAILURE for a failed transaction.
      */
     public void  checkoutOrder(String orderId) throws OrderException {
-        OrdersWrapper order = findOrder(orderId);
+        Order order = getOrderForCheckout(orderId);
         JournalEntry checkoutEntry;
         String id = orderId + "-" + Event.CHECKOUT;
 
@@ -196,7 +207,7 @@ public class OrdersService {
         checkoutOrder(orderId, checkoutEntry, order);
     }
 
-    private void checkoutOrder(String orderId, JournalEntry checkoutEntry, OrdersWrapper order) throws OrderException {
+    private void checkoutOrder(String orderId, JournalEntry checkoutEntry, Order order) throws OrderException {
         switch (Status.findStatusEnum(checkoutEntry.getStatus())) {
             case SUCCESS: return;
             case STOCK_FAILURE: throw new OrderException("The stock was not sufficient to check out order with order ID " + orderId, HttpStatus.BAD_REQUEST);
@@ -249,16 +260,24 @@ public class OrdersService {
         checkoutOrder(orderId, checkoutEntry, order);
     }
 
+    private Order getOrderForCheckout(String orderId) throws OrderException {
+        try {
+            return ordersRepository.get(orderId);
+        } catch (DocumentNotFoundException exception) {
+            throw new OrderException("The order does not exist");
+        }
+    }
+
+    private Boolean checkItem(String itemId) {
+        return stocksServiceClient.checkItem(itemId);
+    }
+
     private void checkItems(String orderId, String itemId)throws OrderException{
         if (orderId == null) {
             throw new OrderException("Order id was not provided");
         }
         if (itemId == null) {
             throw new OrderException("Item id was not provided");
-        }
-        boolean existsOrder = ordersRepository.findOrder(orderId).isEmpty();
-        if (existsOrder) {
-            throw new OrderException("There is no order with it \"" + orderId + "\"");
         }
     }
 }

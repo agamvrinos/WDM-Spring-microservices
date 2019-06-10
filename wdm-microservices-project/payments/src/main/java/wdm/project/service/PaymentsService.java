@@ -36,14 +36,14 @@ public class PaymentsService {
         if (orderId == null) {
             throw new PaymentException("Order ID cannot be null", HttpStatus.BAD_REQUEST);
         }
-        Payment payment;
-        if (paymentsRepository.existsByOrderId(orderId)) {
-            payment = paymentsRepository.findByOrderId(orderId);
-        } else {
+        Payment payment = paymentsRepository.findByOrderId(orderId);
+
+        if (payment == null) {
             payment = new Payment();
             payment.setOrderId(orderId);
             payment.setStatus(Status.PENDING.getValue());
         }
+
         return payment;
     }
 
@@ -59,13 +59,13 @@ public class PaymentsService {
      * microservice has failed
      */
     public Payment payOrder(Long orderId, Long userId, Integer totalPrice) throws PaymentException {
-        Payment payment;
-        if (paymentsRepository.existsByOrderId(orderId)) {
-            return paymentsRepository.findByOrderId(orderId);
-        } else {
+        Payment payment = paymentsRepository.findByOrderId(orderId);
+
+        if (payment == null) {
             payment = new Payment();
             payment.setOrderId(orderId);
             payment.setUserId(userId);
+            payment.setStatus(Status.PENDING.getValue());
         }
 
         try {
