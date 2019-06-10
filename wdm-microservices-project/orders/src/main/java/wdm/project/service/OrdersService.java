@@ -3,6 +3,7 @@ package wdm.project.service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import feign.FeignException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,8 @@ import wdm.project.repository.OrdersItemsRepository;
 import wdm.project.repository.OrdersRepository;
 import wdm.project.service.clients.PaymentsServiceClient;
 import wdm.project.service.clients.StocksServiceClient;
+
+import javax.persistence.EntityNotFoundException;
 
 @Service
 @Transactional(propagation = Propagation.REQUIRED, rollbackFor = OrderException.class)
@@ -139,11 +142,8 @@ public class OrdersService {
 	    	throw new OrderException("There is no order with it \"" + orderId + "\"", HttpStatus.NOT_FOUND);
 	    }
 
-	    // Check whether item exists.
-	    try {
-	        stocksServiceClient.getItem(itemId);
-        } catch (FeignException exception) {
-		    throw new OrderException("GET ITEM FAILED: " + exception.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        if (checkItem(itemId)) {
+            throw new OrderException("Item id does not exist: ", HttpStatus.NOT_FOUND);
         }
 
         OrderItemId orderItemId = new OrderItemId(orderId, itemId);
@@ -160,6 +160,10 @@ public class OrdersService {
             orderItem.setAmount(requestOrderItem.getAmount());
             ordersItemsRepository.save(orderItem);
         }
+    }
+
+    public Boolean checkItem(Long itemId){
+        return stocksServiceClient.checkItem(itemId);
     }
 
     /**
@@ -187,7 +191,11 @@ public class OrdersService {
      * FAILURE for a failed transaction.
      */
     public void checkoutOrder(Long orderId) throws OrderException {
-        OrdersWrapper order = findOrder(orderId);
+        if (orderId == null) {
+            throw new OrderException("The order id was not provided");
+        }
+        Long userId = getUserIdForCheckout(orderId);
+        List<ItemInfo> orderItems = getOrderItemsForCheckout(orderId);
         JournalEntry checkoutEntry;
         JournalEntryId id = new JournalEntryId(orderId, Event.CHECKOUT);
 
@@ -196,10 +204,10 @@ public class OrdersService {
         } else {
 			checkoutEntry = new JournalEntry(id, Status.STOCK_PENDING, -1);
         }
-        checkoutOrder(orderId, checkoutEntry, order);
+        checkoutOrder(orderId, checkoutEntry, userId, orderItems);
     }
 
-    private void checkoutOrder(Long orderId, JournalEntry checkoutEntry, OrdersWrapper order) throws OrderException {
+    private void checkoutOrder(Long orderId, JournalEntry checkoutEntry, Long userId, List<ItemInfo> orderItems) throws OrderException {
         Status status = Status.findStatusEnum(checkoutEntry.getStatus());
         if (status == null) {
             throw new OrderException("Status was not provided", HttpStatus.BAD_REQUEST);
@@ -207,10 +215,10 @@ public class OrdersService {
         switch (status) {
             case SUCCESS: return;
             case STOCK_FAILURE: throw new OrderException("The stock was not sufficient to check out order with order ID " + orderId, HttpStatus.BAD_REQUEST);
-            case PAYMENT_FAILURE: throw new OrderException("The credit of user " + order.getUserId() + " was not sufficient to pay " + checkoutEntry.getPrice(), HttpStatus.BAD_REQUEST);
+            case PAYMENT_FAILURE: throw new OrderException("The credit of user " + userId + " was not sufficient to pay " + checkoutEntry.getPrice(), HttpStatus.BAD_REQUEST);
             case STOCK_PENDING: {
                 try {
-	                Integer price = stocksServiceClient.subtractItem(orderId, order.getOrderItems());
+	                Integer price = stocksServiceClient.subtractItem(orderId, orderItems);
 	                checkoutEntry.setPrice(price);
                     checkoutEntry.setStatus(Status.STOCK_SUCCESS);
                 } catch (FeignException exception) {
@@ -224,7 +232,7 @@ public class OrdersService {
             }
             case STOCK_SUCCESS: {
                 try {
-                    paymentsServiceClient.payOrder(orderId, order.getUserId(), checkoutEntry.getPrice());
+                    paymentsServiceClient.payOrder(orderId, userId, checkoutEntry.getPrice());
                     checkoutEntry.setStatus(Status.SUCCESS);
                 } catch (FeignException exception) {
                     if (exception.status() == 400) {
@@ -237,7 +245,7 @@ public class OrdersService {
             }
             case ROLLBACK_PENDING: {
                 try {
-                    stocksServiceClient.addItems(orderId, order.getOrderItems());
+                    stocksServiceClient.addItems(orderId, orderItems);
                     checkoutEntry.setStatus(Status.PAYMENT_FAILURE);
                 } catch (FeignException exception) {
                     throw new OrderException("Something went wrong when attempting the rollback on the stock.");
@@ -245,6 +253,27 @@ public class OrdersService {
             }
         }
         checkoutEntry = eventService.saveEvent(checkoutEntry);
-        checkoutOrder(orderId, checkoutEntry, order);
+        checkoutOrder(orderId, checkoutEntry, userId, orderItems);
     }
+
+    private Long getUserIdForCheckout(Long orderId) throws OrderException {
+        return ordersRepository.findById(orderId).orElseThrow(
+                () -> new OrderException("Order with ID " + orderId + " not found.", HttpStatus.NOT_FOUND)).getUserId();
+    }
+
+    private List<ItemInfo> getOrderItemsForCheckout(Long orderId) throws OrderException {
+        try {
+            return ordersItemsRepository.findAllById_OrderId(orderId)
+                    .stream()
+                    .map(this::transformOrderItemToItemInfo)
+                    .collect(Collectors.toList());
+        } catch (EntityNotFoundException e){
+            throw new OrderException("There is no order with ID " + orderId + ".", HttpStatus.NOT_FOUND);
+        }
+    }
+
+    private ItemInfo transformOrderItemToItemInfo(OrderItem orderItem){
+        return new ItemInfo(orderItem.getId().getItemId(), orderItem.getAmount());
+    }
+
 }
