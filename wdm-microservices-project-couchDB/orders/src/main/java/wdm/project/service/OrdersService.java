@@ -3,6 +3,7 @@ package wdm.project.service;
 import java.util.List;
 
 import feign.FeignException;
+import org.ektorp.DocumentNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -53,10 +54,9 @@ public class OrdersService {
      * @throws OrderException when the order with the provided ID is not found
      */
     public void removeOrder(String orderId) throws OrderException {
-        if (ordersRepository.contains(orderId)) {
-            Order storedOrder = ordersRepository.get(orderId);
-            ordersRepository.remove(storedOrder);
-        } else {
+        try {
+            ordersRepository.remove(ordersRepository.get(orderId));
+        } catch (DocumentNotFoundException exception) {
             throw new OrderException("There is no order with ID " + orderId + ".", HttpStatus.NOT_FOUND);
         }
     }
@@ -106,41 +106,38 @@ public class OrdersService {
      * @param orderId          the id of the order the item is linked to
      */
     public void addItem(ItemInfo requestOrderItem, String orderId, String itemId) throws OrderException {
-
         checkItems(orderId, itemId);
+        try {
+            if (!checkItem(itemId)) {
+                throw new OrderException("Item id does not exist: ", HttpStatus.NOT_FOUND);
+            }
 
-        if (!checkItem(itemId)) {
-            throw new OrderException("Item id does not exist: ", HttpStatus.NOT_FOUND);
-        }
+            Order storedOrder = ordersRepository.get(orderId);
+            List<ItemInfo> storedItems = storedOrder.getOrderItems();
 
-        Order storedOrder = ordersRepository.get(orderId);
-        List<ItemInfo> storedItems = storedOrder.getOrderItems();
+            boolean storedFlag = false;
 
-        boolean storedFlag = false;
-
-        if (!storedItems.isEmpty()) {
-            for (ItemInfo storedItem : storedItems) {
-                if (storedItem.getId().equals(itemId)) {
-                    storedItem.setAmount(storedItem.getAmount() + requestOrderItem.getAmount());
-                    ordersRepository.update(storedOrder);
-                    storedFlag = true;
-                    break;
+            if (!storedItems.isEmpty()) {
+                for (ItemInfo storedItem : storedItems) {
+                    if (storedItem.getId().equals(itemId)) {
+                        storedItem.setAmount(storedItem.getAmount() + requestOrderItem.getAmount());
+                        ordersRepository.update(storedOrder);
+                        storedFlag = true;
+                        break;
+                    }
                 }
             }
+
+            if (!storedFlag) {
+                ItemInfo newItem = new ItemInfo();
+                newItem.setAmount(requestOrderItem.getAmount());
+                newItem.setId(itemId);
+                storedItems.add(newItem);
+                ordersRepository.update(storedOrder);
+            }
+        } catch (DocumentNotFoundException exception) {
+            throw new OrderException("There is no order with it \"" + orderId + "\"");
         }
-
-        if (!storedFlag) {
-            ItemInfo newItem = new ItemInfo();
-            newItem.setAmount(requestOrderItem.getAmount());
-            newItem.setId(itemId);
-            storedItems.add(newItem);
-            ordersRepository.update(storedOrder);
-        }
-
-    }
-
-    public Boolean checkItem(String itemId){
-        return stocksServiceClient.checkItem(itemId);
     }
 
     /**
@@ -153,20 +150,22 @@ public class OrdersService {
     public void removeItem(String orderId, String itemId) throws OrderException {
 
         checkItems(orderId, itemId);
-
-        if (ordersRepository.contains(orderId)) {
-            Order storedOrder = ordersRepository.get(orderId);
-            List<ItemInfo> storedItems = storedOrder.getOrderItems();
-
-            for (ItemInfo storedItem : storedItems) {
-                if (storedItem.getId().equals(itemId)) {
-                    storedItems.remove(storedItem);
-                    ordersRepository.update(storedOrder);
-                    break;
+        try {
+            try {
+                Order storedOrder = ordersRepository.get(orderId);
+                List<ItemInfo> storedItems = storedOrder.getOrderItems();
+                for (ItemInfo storedItem : storedItems) {
+                    if (storedItem.getId().equals(itemId)) {
+                        storedItems.remove(storedItem);
+                        ordersRepository.update(storedOrder);
+                        break;
+                    }
                 }
+            } catch (DocumentNotFoundException exception) {
+                throw new OrderException("Unable to remove item with ID " + itemId + " from order with ID " + orderId + ".", HttpStatus.NOT_FOUND);
             }
-        } else {
-            throw new OrderException("Unable to remove item with ID " + itemId + " from order with ID " + orderId + ".", HttpStatus.NOT_FOUND);
+        } catch (DocumentNotFoundException exception) {
+            throw new OrderException("There is no order with it \"" + orderId + "\"");
         }
     }
 
@@ -174,12 +173,14 @@ public class OrdersService {
      * Checks-out an order invoking every other micro-service.
      *
      * @param orderId the id of order
-     * @return the status of the transaction SUCCESS for a
-     * successful transaction
-     * FAILURE for a failed transaction.
+     *                successful transaction
+     *                FAILURE for a failed transaction.
      */
     public void checkoutOrder(String orderId) throws OrderException {
-        OrdersWrapper order = findOrder(orderId);
+        if (orderId == null) {
+            throw new OrderException("The order id was not provided");
+        }
+        Order order = getOrderForCheckout(orderId);
         Integer price;
         try {
             price = stocksServiceClient.subtractItems(order.getOrderItems());
@@ -202,16 +203,24 @@ public class OrdersService {
         }
     }
 
+    private Order getOrderForCheckout(String orderId) throws OrderException {
+        try {
+            return ordersRepository.get(orderId);
+        } catch (Exception exception) {
+            throw new OrderException("The order does not exist");
+        }
+    }
+
+    private Boolean checkItem(String itemId) {
+        return stocksServiceClient.checkItem(itemId);
+    }
+
     private void checkItems(String orderId, String itemId) throws OrderException {
         if (orderId == null) {
             throw new OrderException("Order id was not provided");
         }
         if (itemId == null) {
             throw new OrderException("Item id was not provided");
-        }
-        boolean existsOrder = ordersRepository.contains(orderId);
-        if (!existsOrder) {
-            throw new OrderException("There is no order with it \"" + orderId + "\"");
         }
     }
 }

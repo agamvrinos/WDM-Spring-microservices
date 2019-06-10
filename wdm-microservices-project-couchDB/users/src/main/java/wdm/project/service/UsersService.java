@@ -1,5 +1,6 @@
 package wdm.project.service;
 
+import org.ektorp.DocumentNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -65,11 +66,11 @@ public class UsersService {
         if (id == null) {
             throw new UsersException("Id was not provided", HttpStatus.BAD_REQUEST);
         }
-        boolean existsUser = usersRepository.contains(id);
-        if (!existsUser) {
+        try{
+            return usersRepository.get(id);
+        } catch (DocumentNotFoundException exception){
             throw new UsersException("There is no user with id \"" + id + "\"", HttpStatus.NOT_FOUND);
         }
-        return usersRepository.get(id);
     }
 
     /**

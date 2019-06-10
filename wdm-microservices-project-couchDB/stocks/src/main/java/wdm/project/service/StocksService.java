@@ -1,5 +1,7 @@
 package wdm.project.service;
 
+import org.ektorp.DocumentNotFoundException;
+import org.ektorp.UpdateConflictException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.Cacheable;
@@ -30,11 +32,11 @@ public class StocksService {
         if (itemId == null) {
             throw new StockException("Provided item ID was null. Please provide a valid ID.", HttpStatus.BAD_REQUEST);
         }
-        boolean existsStocks = stocksRepository.contains(itemId);
-        if (!existsStocks) {
+        try{
+            return stocksRepository.get(itemId);
+        } catch (DocumentNotFoundException exception){
             throw new StockException("The item with ID " + itemId + " was not found.", HttpStatus.NOT_FOUND);
         }
-        return stocksRepository.get(itemId);
     }
 
     /**
@@ -109,7 +111,7 @@ public class StocksService {
             try {
                 stocksRepository.update(item);
             }
-            catch(Exception e) {
+            catch(UpdateConflictException  e) {
                 subtractItems(itemInfos.subList(idxOfFailure,itemInfos.size()-1));
             }
             idxOfFailure++;
@@ -133,7 +135,7 @@ public class StocksService {
             try {
                 stocksRepository.update(item);
             }
-            catch(Exception e) {
+            catch(UpdateConflictException  e) {
                 addItems(itemInfos.subList(idxOfFailure,itemInfos.size()-1));
             }
             idxOfFailure++;
@@ -152,7 +154,7 @@ public class StocksService {
             try {
                 stocksRepository.update(item);
             }
-            catch(Exception e) {
+            catch(UpdateConflictException e) {
                 rollbackItemSubtraction(itemInfos.subList(idxOfFailure,itemInfos.size()-1));
             }
             idxOfFailure++;
