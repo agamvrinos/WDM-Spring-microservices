@@ -14,4 +14,5 @@ public class StocksRepository extends CouchDbRepositorySupport<Item> {
         super(Item.class, db);
         initStandardDesignDocument();
     }
+
 }

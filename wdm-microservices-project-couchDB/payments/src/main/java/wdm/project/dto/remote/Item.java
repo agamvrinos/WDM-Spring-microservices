@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 public class Item implements Serializable {
 
-	private String id;
+	private Long id;
 	private String title;
 	private Integer stock;
 	private Integer price;
@@ -12,11 +12,11 @@ public class Item implements Serializable {
 	public Item() {
 	}
 
-	public String getId() {
+	public Long getId() {
 		return id;
 	}
 
-	public void setId(String id) {
+	public void setId(Long id) {
 		this.id = id;
 	}
 

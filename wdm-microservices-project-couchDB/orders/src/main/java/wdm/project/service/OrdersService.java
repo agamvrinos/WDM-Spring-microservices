@@ -3,6 +3,7 @@ package wdm.project.service;
 import java.util.List;
 
 import feign.FeignException;
+import org.ektorp.DocumentNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -17,10 +18,10 @@ import wdm.project.service.clients.StocksServiceClient;
 @Service
 public class OrdersService {
 
-	@Autowired
-	private StocksServiceClient stocksServiceClient;
-	@Autowired
-	private PaymentsServiceClient paymentsServiceClient;
+    @Autowired
+    private StocksServiceClient stocksServiceClient;
+    @Autowired
+    private PaymentsServiceClient paymentsServiceClient;
     @Autowired
     private OrderRepository ordersRepository;
 
@@ -34,15 +35,15 @@ public class OrdersService {
      * @throws OrderException in case the id of the user was not provided
      */
     public String createOrder(String userId) throws OrderException {
-    	if (userId == null) {
-    		throw new OrderException("User id was not provided", HttpStatus.BAD_REQUEST);
-	    }
+        if (userId == null) {
+            throw new OrderException("User id was not provided", HttpStatus.BAD_REQUEST);
+        }
         Order order = new Order();
         order.setUserId(userId);
         order.setTotal(0);
         ordersRepository.add(order);
 
-        return  order.getId();
+        return order.getId();
     }
 
     /**
@@ -53,10 +54,9 @@ public class OrdersService {
      * @throws OrderException when the order with the provided ID is not found
      */
     public void removeOrder(String orderId) throws OrderException {
-        if (ordersRepository.contains(orderId)) {
-            Order storedOrder = ordersRepository.get(orderId);
-            ordersRepository.remove(storedOrder);
-        } else {
+        try {
+            ordersRepository.remove(ordersRepository.get(orderId));
+        } catch (DocumentNotFoundException exception) {
             throw new OrderException("There is no order with ID " + orderId + ".", HttpStatus.NOT_FOUND);
         }
     }
@@ -69,18 +69,18 @@ public class OrdersService {
      * @param orderId the id of the order
      * @return the order information (user id, items' id, payment status)
      * @throws OrderException when the order id was not provided or the
-     * order with the provided ID is not found
+     *                        order with the provided ID is not found
      */
     public OrdersWrapper findOrder(String orderId) throws OrderException {
-		if (orderId == null) {
-			throw new OrderException("The order id was not provided");
-		}
+        if (orderId == null) {
+            throw new OrderException("The order id was not provided");
+        }
 
-		Order order;
+        Order order;
 
-		try{
-            order  = ordersRepository.get(orderId);
-        } catch (Exception exception) {
+        try {
+            order = ordersRepository.get(orderId);
+        } catch (DocumentNotFoundException exception) {
             throw new OrderException("The order does not exist");
         }
 
@@ -101,71 +101,71 @@ public class OrdersService {
      * Adds an item to a specified order.
      *
      * @param requestOrderItem contains the amount that of the items
-     * in the order
-     * @param itemId the id of the item
-     * @param orderId the id of the order the item is linked to
+     *                         in the order
+     * @param itemId           the id of the item
+     * @param orderId          the id of the order the item is linked to
      */
     public void addItem(ItemInfo requestOrderItem, String orderId, String itemId) throws OrderException {
-
         checkItems(orderId, itemId);
-
-        // Check whether item exists.
         try {
-            stocksServiceClient.getItem(itemId);
-        } catch (FeignException exception) {
-            throw new OrderException("There is no item with id \"" + itemId + "\"");
-        }
+            if (!checkItem(itemId)) {
+                throw new OrderException("Item id does not exist: ", HttpStatus.NOT_FOUND);
+            }
 
-	    Order storedOrder = ordersRepository.get(orderId);
-	    List<ItemInfo> storedItems =  storedOrder.getOrderItems();
+            Order storedOrder = ordersRepository.get(orderId);
+            List<ItemInfo> storedItems = storedOrder.getOrderItems();
 
-	    boolean storedFlag = false;
+            boolean storedFlag = false;
 
-        if (!storedItems.isEmpty()){
-            for (ItemInfo storedItem : storedItems) {
-                if (storedItem.getId().equals(itemId)) {
-                    storedItem.setAmount(storedItem.getAmount() + requestOrderItem.getAmount());
-                    ordersRepository.update(storedOrder);
-                    storedFlag = true;
-                    break;
+            if (!storedItems.isEmpty()) {
+                for (ItemInfo storedItem : storedItems) {
+                    if (storedItem.getId().equals(itemId)) {
+                        storedItem.setAmount(storedItem.getAmount() + requestOrderItem.getAmount());
+                        ordersRepository.update(storedOrder);
+                        storedFlag = true;
+                        break;
+                    }
                 }
             }
-        }
 
-        if(!storedFlag){
-            ItemInfo newItem = new ItemInfo();
-            newItem.setAmount(requestOrderItem.getAmount());
-            newItem.setId(itemId);
-            storedItems.add(newItem);
-            ordersRepository.update(storedOrder);
+            if (!storedFlag) {
+                ItemInfo newItem = new ItemInfo();
+                newItem.setAmount(requestOrderItem.getAmount());
+                newItem.setId(itemId);
+                storedItems.add(newItem);
+                ordersRepository.update(storedOrder);
+            }
+        } catch (DocumentNotFoundException exception) {
+            throw new OrderException("There is no order with it \"" + orderId + "\"");
         }
-
     }
 
     /**
      * Removes a specified item from a specified order.
      *
      * @param orderId the id of the order that the item is removed from
-     * @param itemId the id of the item that is to be removed
+     * @param itemId  the id of the item that is to be removed
      * @throws OrderException when the OrderItem with provided IDs cannot be found.
      */
     public void removeItem(String orderId, String itemId) throws OrderException {
 
         checkItems(orderId, itemId);
-
-        if (ordersRepository.contains(orderId)){
-            Order storedOrder = ordersRepository.get(orderId);
-            List<ItemInfo> storedItems =  storedOrder.getOrderItems();
-
-            for (ItemInfo storedItem : storedItems) {
-                if (storedItem.getId().equals(itemId)) {
-                    storedItems.remove(storedItem);
-                    ordersRepository.update(storedOrder);
-                    break;
+        try {
+            try {
+                Order storedOrder = ordersRepository.get(orderId);
+                List<ItemInfo> storedItems = storedOrder.getOrderItems();
+                for (ItemInfo storedItem : storedItems) {
+                    if (storedItem.getId().equals(itemId)) {
+                        storedItems.remove(storedItem);
+                        ordersRepository.update(storedOrder);
+                        break;
+                    }
                 }
+            } catch (DocumentNotFoundException exception) {
+                throw new OrderException("Unable to remove item with ID " + itemId + " from order with ID " + orderId + ".", HttpStatus.NOT_FOUND);
             }
-        } else {
-            throw new OrderException("Unable to remove item with ID " + itemId + " from order with ID " + orderId + ".", HttpStatus.NOT_FOUND);
+        } catch (DocumentNotFoundException exception) {
+            throw new OrderException("There is no order with it \"" + orderId + "\"");
         }
     }
 
@@ -173,12 +173,14 @@ public class OrdersService {
      * Checks-out an order invoking every other micro-service.
      *
      * @param orderId the id of order
-     * @return the status of the transaction SUCCESS for a
-     * successful transaction
-     * FAILURE for a failed transaction.
+     *                successful transaction
+     *                FAILURE for a failed transaction.
      */
-    public void  checkoutOrder(String orderId) throws OrderException {
-        OrdersWrapper order = findOrder(orderId);
+    public void checkoutOrder(String orderId) throws OrderException {
+        if (orderId == null) {
+            throw new OrderException("The order id was not provided");
+        }
+        Order order = getOrderForCheckout(orderId);
         Integer price;
         try {
             price = stocksServiceClient.subtractItems(order.getOrderItems());
@@ -201,16 +203,24 @@ public class OrdersService {
         }
     }
 
-    private void checkItems(String orderId, String itemId)throws OrderException{
+    private Order getOrderForCheckout(String orderId) throws OrderException {
+        try {
+            return ordersRepository.get(orderId);
+        } catch (DocumentNotFoundException exception) {
+            throw new OrderException("The order does not exist");
+        }
+    }
+
+    private Boolean checkItem(String itemId) {
+        return stocksServiceClient.checkItem(itemId);
+    }
+
+    private void checkItems(String orderId, String itemId) throws OrderException {
         if (orderId == null) {
             throw new OrderException("Order id was not provided");
         }
         if (itemId == null) {
             throw new OrderException("Item id was not provided");
-        }
-        boolean existsOrder = ordersRepository.contains(orderId);
-        if (!existsOrder) {
-            throw new OrderException("There is no order with it \"" + orderId + "\"");
         }
     }
 }

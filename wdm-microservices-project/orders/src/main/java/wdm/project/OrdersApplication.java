@@ -2,6 +2,7 @@ package wdm.project;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.cloud.netflix.eureka.EurekaInstanceConfigBean;
 import org.springframework.cloud.openfeign.EnableFeignClients;
@@ -10,6 +11,7 @@ import org.springframework.context.annotation.Profile;
 
 @EnableFeignClients
 @SpringBootApplication
+@EnableCaching
 public class OrdersApplication {
 
 	public static void main(String[] args) {

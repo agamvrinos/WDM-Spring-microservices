@@ -8,6 +8,8 @@ import wdm.project.dto.User;
 import wdm.project.exception.UsersException;
 import wdm.project.repository.UsersRepository;
 
+import java.util.Optional;
+
 @Service
 @Transactional(rollbackFor = UsersException.class)
 public class UsersService {
@@ -66,11 +68,8 @@ public class UsersService {
         if (id == null) {
             throw new UsersException("Id was not provided", HttpStatus.BAD_REQUEST);
         }
-        boolean existsUser = usersRepository.existsById(id);
-        if (!existsUser) {
-            throw new UsersException("There is no user with id \"" + id + "\"", HttpStatus.NOT_FOUND);
-        }
-        return usersRepository.findById(id).orElseThrow(RuntimeException::new);
+        return usersRepository.findById(id).orElseThrow(
+                () -> new UsersException("There is no user with id \"" + id + "\"", HttpStatus.NOT_FOUND));
     }
 
     /**
