@@ -3,6 +3,7 @@ package wdm.project.service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import feign.FeignException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,8 @@ import wdm.project.repository.OrdersItemsRepository;
 import wdm.project.repository.OrdersRepository;
 import wdm.project.service.clients.PaymentsServiceClient;
 import wdm.project.service.clients.StocksServiceClient;
+
+import javax.persistence.EntityNotFoundException;
 
 @Service
 @Transactional(rollbackFor = OrderException.class)
@@ -171,15 +174,18 @@ public class OrdersService {
      * Checks-out an order invoking every other micro-service.
      *
      * @param orderId the id of order
-     * @return the status of the transaction SUCCESS for a
      * successful transaction
      * FAILURE for a failed transaction.
      */
     public void checkoutOrder(Long orderId) throws OrderException {
-        OrdersWrapper order = findOrder(orderId);
+        if (orderId == null) {
+            throw new OrderException("The order id was not provided");
+        }
+        Long userId = getUserIdForCheckout(orderId);
+        List<ItemInfo> orderItems = getOrderItemsForCheckout(orderId);
         Integer price;
         try {
-            price = stocksServiceClient.subtractItems(order.getOrderItems());
+            price = stocksServiceClient.subtractItems(orderItems);
         } catch (FeignException exception) {
             if (exception.status() == 400) {
                 throw new OrderException(new String(exception.content()), HttpStatus.BAD_REQUEST);
@@ -188,14 +194,37 @@ public class OrdersService {
             }
         }
         try {
-            paymentsServiceClient.payOrder(orderId, order.getUserId(), price);
+            paymentsServiceClient.payOrder(orderId, userId, price);
         } catch (FeignException exception) {
             if (exception.status() == 400) {
-                stocksServiceClient.addItems(order.getOrderItems());
+                stocksServiceClient.addItems(orderItems);
                 throw new OrderException(new String(exception.content()), HttpStatus.BAD_REQUEST);
             } else {
                 throw new OrderException("Something went wrong when paying the order.", HttpStatus.INTERNAL_SERVER_ERROR);
             }
         }
     }
+
+    private Long getUserIdForCheckout(Long orderId) throws OrderException {
+        return ordersRepository.findById(orderId).orElseThrow(
+                () -> new OrderException("Order with ID " + orderId + " not found.", HttpStatus.NOT_FOUND)).getUserId();
+    }
+
+    private List<ItemInfo> getOrderItemsForCheckout(Long orderId) throws OrderException {
+        try {
+            return ordersItemsRepository.findAllById_OrderId(orderId)
+                    .stream()
+                    .map(this::transformOrderItemToItemInfo)
+                    .collect(Collectors.toList());
+        } catch (EntityNotFoundException e){
+            throw new OrderException("There is no order with ID " + orderId + ".", HttpStatus.NOT_FOUND);
+        }
+    }
+
+    private ItemInfo transformOrderItemToItemInfo(OrderItem orderItem){
+        return new ItemInfo(orderItem.getId().getItemId(), orderItem.getAmount());
+    }
+
+
+
 }
