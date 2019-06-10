@@ -5,6 +5,8 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -20,6 +22,7 @@ import wdm.project.repository.StocksRepository;
 
 @Service
 @Transactional(propagation = Propagation.REQUIRED, rollbackFor = StockException.class)
+@CacheConfig(cacheNames={"items"})
 public class StocksService {
 
     @Autowired
@@ -38,11 +41,8 @@ public class StocksService {
         if (itemId == null) {
             throw new StockException("Provided item ID was null. Please provide a valid ID.", HttpStatus.BAD_REQUEST);
         }
-        boolean existsStocks = stocksRepository.existsById(itemId);
-        if (!existsStocks) {
-            throw new StockException("The item with ID " + itemId + " was not found.", HttpStatus.NOT_FOUND);
-        }
-        return stocksRepository.findById(itemId).orElseThrow(RuntimeException::new);
+        return stocksRepository.findById(itemId).orElseThrow(()->
+                new StockException("The item with ID " + itemId + " was not found.", HttpStatus.NOT_FOUND));
     }
 
     /**
@@ -57,6 +57,9 @@ public class StocksService {
         Item item = getItem(itemId);
         return item.getStock();
     }
+
+    @Cacheable
+    public Boolean checkItem(Long itemId){ return stocksRepository.existsById(itemId); }
 
     /**
      * Creates a new Item based on the provided
