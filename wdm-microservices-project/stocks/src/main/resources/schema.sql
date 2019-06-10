@@ -20,7 +20,7 @@ transaction_id bigserial    NOT NULL,
 event          varchar(100) NOT NULL,
 status         varchar(100) NOT NULL,
 price          integer      NULL,
-CONSTRAINT "Journal_pkey" PRIMARY KEY (transaction_id)
+CONSTRAINT "Journal_pkey" PRIMARY KEY (transaction_id, event)
 ) TABLESPACE pg_default;
 
 ALTER TABLE public.item OWNER to postgres;
