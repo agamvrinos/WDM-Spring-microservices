@@ -70,27 +70,45 @@ in the database so, we do not do them again.
 
 ### Docker and Deployment notes
 
-requirements: Docker installed locally
+requirements: Docker, docker-compose
 
-#### running whole system as containers locally
+We use Docker to containerize the microservices and docker-compose run the whole containerized system locally.
+The databases have to run locally on their default ports (postgres: 5432, couchdb: 5984).
+
+#### build/run whole system locally
 
 1. switch current working directory to respective project folder
 2. In order to build docker images of all services run
 the build.sh in the top level of the project. This will 
 create images and save them locally.
 3. In order to run locally use the following command:
-"docker-compose up". This may not work on linux due
+"docker-compose up". This does not work on linux due
 to the way the localhost ip is resolved (needed to 
 contact the couchdb/postgres instance which is not running
-in its own container).
+in its own container)....
 
 #### publish images to docker hub
+
 1. retag images to user/repo:service
 2. docker login
 3. docker push user/repo
 
 Then when creating task definitions for ECS refer to the 
 correct user/repo (needs to be public).
+
+#### AWS elastic container service deployment
+
+The system is deployed on a ECS cluster with each container defined as its own task,
+running as its own service (in ECS jargon). The following environment variables are needed:
+
+- URI of configuration service 
+- URI of eureka service
+- Spring profile (aws)
+- DB URI
+
+#### DB deployment
+
+CouchDB is deployed on EC2 instances, Postgres using AWS RDS.
 
 ### Team members
 
