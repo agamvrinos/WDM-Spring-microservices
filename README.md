@@ -1,7 +1,7 @@
-# Webshop Assignment - Spring RESTful microservices
+# Webshop Assignment - Spring microservices
 
 RESTful microservices created using the Spring Boot framework for the application layer 
-and either PotgreSQL or CouchDB as a database. This project is done for TU Delft's course 
+and PostgreSQL/CouchDB as a database. This project is done for TU Delft's course 
 Web Data Management (IN4331) 2019.
 
 ### Architecture
@@ -22,17 +22,17 @@ of the microservices.
    * */users/credit/{user_id}* -> (GET - returns the current credit of a user)
    * */users/credit/subtract/{user_id}/{amount}* -> (POST - subtracts the amount from the credit of the user)
    * */users/credit/add/{user_id}/{amount}* -> (POST - subtracts the amount from the credit of the user)
-* *Payment microservice:* 
+* **Payment microservice:** 
     * */payment/pay/{user_id}/{order_id}* -> (POST - calls the user microservice in order to subtract the amount from the  user's credit)
     * */payment/status/{order_id}* -> (GET - returns the payment status)
-* *Order microservice:* 
+* **Order microservice:**  
     * */orders/create/{user_id}* -> (POST - creates an order for the given user and returns an ID)
     * */orders/remove/{order_id}* -> (DELETE - deletes an order by ID)
     * */orders/find/{order_id}* -> (GET - retrieves the information of an order)
     * */orders/addItem/{order_id}/{item_id}* -> (POST - adds a given item in the order given)
     * */orders/removeItem/{order_id}/{item_id}* -> (DELETE - removes the given item from the given order)
     * */orders/checkout/{order_id}* -> (POST - makes the payment (via calling the payment service), subtracts the stock (via the stock service))
-* *Stock microservice:* 
+* **Stock microservice:** 
     * */stock/availability/{item_id}* -> (GET - returns an item’s availability)
     * */stock/add/{item_id}/{number}* -> (POST - increases the stock of a given item)
     * */stock/item/create/* -> (POST - adds an item, and returns its ID)
@@ -48,13 +48,13 @@ Our system is built to support the distributed transaction (checkout) where all 
 #### Consistency (SAGA-like) ####
 The consistency of our system is based on the SAGA pattern of compensating actions 
 upon failure. However, since the communication is synchronous due to the RESTful nature of 
-our services the only way  compensation action will be initiated is when a user does not hve enough credit.
-In that case the compensating action will be to add the items that we subtracted back to the stock.
+our services the only way compensation action will be initiated is when a user does not have enough credit.
+In that case the compensating action will be to add the items that were subtracted back to the stock.
 
 #### Machine failures (journaling) ####
 The way we decided to solve the case of machine failures is by journaling. Namely, we record every operation
-that happens on the database. In case of a failure if a transaction cannot be completed then
-the system will either restore the the records back to their original state or try again
+that happens on the database. In case of a failure, if a transaction cannot be completed then
+the system will either restore the records back to their original state or try again
 since we assume that if a microservice instance fails another one will take its place almost
 instantly. In that case we do not rollback but check if the changes have already been made
 in the database so, we do not do them again. 
@@ -62,21 +62,11 @@ in the database so, we do not do them again.
 ### Project structure 
 #### Branches ####
 
-*  [`master`](https://github.com/agamvrinos/WDM-Spring-microservices)
-
-    This branch contains the main implementation without taking into 
+*  [`master`](https://github.com/agamvrinos/WDM-Spring-microservices): This branch contains the main implementation without taking into 
     account machine failures.
-* [`configuration-files`](https://github.com/agamvrinos/WDM-Spring-microservices/tree/configuration-files)
-
-    Here we have all the configuration files that are used by the 
-    configuration server.
-* [`master-consistency`](https://github.com/agamvrinos/WDM-Spring-microservices/tree/master-consistency)
-
-    This branch contains the main implementation but, with the addition of 
-    database journaling that makes our implementation resistant to failures.
-* [`locust-stress-test`](https://github.com/agamvrinos/WDM-Spring-microservices/tree/locust-stress-test)
-
-    In this branch we have our implementation of the locust stress test.
+* [`configuration-files`](https://github.com/agamvrinos/WDM-Spring-microservices/tree/configuration-files): Here we have all the configuration files that are used by the configuration server.
+* [`master-consistency`](https://github.com/agamvrinos/WDM-Spring-microservices/tree/master-consistency): This branch contains the main implementation but, with the addition of database journaling that makes our implementation resistant to failures.
+* [`locust-stress-test`](https://github.com/agamvrinos/WDM-Spring-microservices/tree/locust-stress-test): In this branch we have our implementation of the locust stress test.
 
 ### Docker and Deployment notes
 
